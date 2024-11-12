@@ -39,11 +39,11 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.btnExit.clicked.connect(self.Exit)
 
         self.remote = mysql.connector.connect(
-            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
-            port = 3306,
-            user = "root",
-            password = "Dbsalstjq128!",
-            database = "iot"
+            host = "host",
+            port = "****",
+            user = "your name",
+            password = "****",
+            database = "your database"
         )
         self.cur = self.remote.cursor()
 
