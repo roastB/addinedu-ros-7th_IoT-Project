@@ -7,13 +7,15 @@ import mysql.connector
 from datetime import datetime
 
 
-from_class = uic.loadUiType("main.ui")[0]
+Ui_MainWindow, QtBaseClass = uic.loadUiType("main.ui")
 
-
-class WindowClass(QMainWindow, from_class):
+class WindowClass(QtBaseClass, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        
+        # setSizeGripEnabled 추가
+        self.setSizeGripEnabled(True)  # 크기 조절 가능하도록 설정
 
         self.Name
         self.Phone
@@ -45,7 +47,68 @@ class WindowClass(QMainWindow, from_class):
         )
         self.cur = self.remote.cursor()
 
+        # [1] ParkingGuide_Line
+        self.pixmap = QPixmap(self.ParkingGuideBoard.width(), self.ParkingGuideBoard.height())
+        self.pixmap.fill(Qt.transparent)
+        self.ParkingGuideBoard.setPixmap(self.pixmap)
+        self.PathDisplay()
 
+        # [2] ParkingGuide_LED
+        self.scene = QGraphicsScene()
+        
+        # 적절한 위치 및 크기로 설정
+        self.GuideLED_1.setScene(self.scene)
+        self.GuideLED_1.setGeometry(344, 800, 50, 50)
+
+        # 원형 LED 생성
+        self.led_item = QGraphicsEllipseItem(0, 0, 20, 20)
+        self.led_item.setBrush(QBrush(QColor('white')))
+        self.led_item.setPen(QPen(Qt.NoPen))  # 테두리 없는 원
+        
+        # LED 아이템을 scene에 추가
+        self.scene.addItem(self.led_item)
+        self.led_on = False
+
+    # [2] ParkingGuide_LED
+    def toggle_led(self):
+        if self.led_on:
+            self.led_item.setBrush(QBrush(QColor('white')))  # LED OFF 상태
+        else:
+            self.led_item.setBrush(QBrush(QColor('red')))  # LED ON 상태
+        
+        self.led_on = not self.led_on
+
+    # [1] ParkingGuideLine
+    def PathDisplay(self):
+        painter = QPainter(self.ParkingGuideBoard.pixmap())
+
+        # Pen 설정
+        pen1 = QPen(Qt.red, 5, Qt.SolidLine)
+        pen2 = QPen(Qt.blue, 5, Qt.SolidLine)
+        pen3 = QPen(Qt.green, 5, Qt.SolidLine)
+        pen4 = QPen(Qt.yellow, 5, Qt.SolidLine)
+
+        # 1번 자리
+        painter.setPen(pen1)
+        painter.drawLine(215, 800, 215, 50)
+        painter.drawLine(215, 50, 15, 50)
+
+        # 2번 자리
+        painter.setPen(pen2)
+        painter.drawLine(230, 800, 230, 50)
+        painter.drawLine(230, 50, 415, 50)
+
+        # 3번 자리
+        painter.setPen(pen3)
+        painter.drawLine(200, 800, 200, 350)
+        painter.drawLine(200, 350, 15, 350)
+
+        # 4번 자리
+        painter.setPen(pen4)
+        painter.drawLine(245, 800, 245, 350)
+        painter.drawLine(245, 350, 415, 350)
+
+        painter.end()
     def Charge(self):
         self.Fee.show()
         self.feeLabel.show()
@@ -61,11 +124,11 @@ class WindowClass(QMainWindow, from_class):
         
         match kind:
             case "EV":
-                fee = 75
+                fee = 10
             case "경차":
-                fee = 50
+                fee = 5
             case default:
-                fee =100
+                fee = 20
         
         dt_result = (dt_now-dt_entry).seconds * fee
         
@@ -126,5 +189,9 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     myWindows = WindowClass()
     myWindows.show()
+
+    timer = QTimer()
+    timer.timeout.connect(myWindows.toggle_led)
+    timer.start(5000)  # 1초마다 ON/OFF 토글
 
     sys.exit(app.exec_())

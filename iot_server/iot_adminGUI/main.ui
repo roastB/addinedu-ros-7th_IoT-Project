@@ -7,11 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>950</width>
-    <height>544</height>
+    <height>876</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
+  </property>
+  <property name="sizeGripEnabled">
+   <bool>false</bool>
   </property>
   <widget class="QGraphicsView" name="graphicsView">
    <property name="geometry">
@@ -19,7 +22,7 @@
      <x>20</x>
      <y>30</y>
      <width>681</width>
-     <height>481</height>
+     <height>821</height>
     </rect>
    </property>
   </widget>
@@ -28,7 +31,7 @@
     <rect>
      <x>790</x>
      <y>40</y>
-     <width>131</width>
+     <width>113</width>
      <height>25</height>
     </rect>
    </property>
@@ -41,7 +44,7 @@
     <rect>
      <x>790</x>
      <y>80</y>
-     <width>131</width>
+     <width>113</width>
      <height>25</height>
     </rect>
    </property>
@@ -106,7 +109,7 @@
     <rect>
      <x>790</x>
      <y>160</y>
-     <width>131</width>
+     <width>113</width>
      <height>25</height>
     </rect>
    </property>
@@ -130,10 +133,10 @@
   <widget class="QPushButton" name="one">
    <property name="geometry">
     <rect>
-     <x>110</x>
-     <y>90</y>
-     <width>31</width>
-     <height>25</height>
+     <x>20</x>
+     <y>30</y>
+     <width>131</width>
+     <height>111</height>
     </rect>
    </property>
    <property name="text">
@@ -143,10 +146,10 @@
   <widget class="QPushButton" name="two">
    <property name="geometry">
     <rect>
-     <x>600</x>
-     <y>90</y>
-     <width>31</width>
-     <height>25</height>
+     <x>580</x>
+     <y>30</y>
+     <width>121</width>
+     <height>111</height>
     </rect>
    </property>
    <property name="text">
@@ -156,10 +159,10 @@
   <widget class="QPushButton" name="three">
    <property name="geometry">
     <rect>
-     <x>110</x>
-     <y>410</y>
-     <width>31</width>
-     <height>25</height>
+     <x>20</x>
+     <y>330</y>
+     <width>131</width>
+     <height>101</height>
     </rect>
    </property>
    <property name="text">
@@ -169,10 +172,10 @@
   <widget class="QPushButton" name="four">
    <property name="geometry">
     <rect>
-     <x>600</x>
-     <y>410</y>
-     <width>31</width>
-     <height>25</height>
+     <x>580</x>
+     <y>340</y>
+     <width>121</width>
+     <height>101</height>
     </rect>
    </property>
    <property name="text">
@@ -184,7 +187,7 @@
     <rect>
      <x>790</x>
      <y>120</y>
-     <width>131</width>
+     <width>113</width>
      <height>25</height>
     </rect>
    </property>
@@ -236,7 +239,7 @@
     <rect>
      <x>790</x>
      <y>200</y>
-     <width>131</width>
+     <width>151</width>
      <height>26</height>
     </rect>
    </property>
@@ -247,17 +250,53 @@
     <string>yy.M.d. hh:mm:ss</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="Fee">
+  <widget class="QLineEdit" name="CountBox">
    <property name="geometry">
     <rect>
      <x>790</x>
-     <y>240</y>
-     <width>131</width>
+     <y>310</y>
+     <width>113</width>
      <height>25</height>
     </rect>
    </property>
    <property name="readOnly">
     <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="exitLabel_2">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>310</y>
+     <width>67</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>차량 수</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="ParkingGuideBoard">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>30</y>
+     <width>431</width>
+     <height>821</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QGraphicsView" name="GuideLED_1">
+   <property name="geometry">
+    <rect>
+     <x>760</x>
+     <y>670</y>
+     <width>81</width>
+     <height>61</height>
+    </rect>
    </property>
   </widget>
   <widget class="QLabel" name="feeLabel">
@@ -271,6 +310,19 @@
    </property>
    <property name="text">
     <string>주차요금</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="Fee">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>240</y>
+     <width>113</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="readOnly">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>
