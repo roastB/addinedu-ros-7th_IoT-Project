@@ -25,11 +25,11 @@ class WindowClass(QMainWindow, from_class):
             self.cbKind.addItem(kind)
 
         self.remote = mysql.connector.connect(
-            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
-            port = 3306,
+            host = "host",
+            port = "port",
             user = "root",
-            password = "Dbsalstjq128!",
-            database = "iot"
+            password = "your password",
+            database = "database"
         )
 
         self.cur = self.remote.cursor()
