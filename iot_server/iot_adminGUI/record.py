@@ -4,14 +4,15 @@ from PyQt5.QtGui import *
 from PyQt5 import uic
 from PyQt5.QtCore import QDateTime
 import mysql.connector
+import exit_signal
 
-from_class = uic.loadUiType("/home/cho/dev_ws/pyqt/src/record.ui")[0]
+from_class = uic.loadUiType("record.ui")[0]
 
 class WindowClass(QMainWindow, from_class):
-    def __init__(self):
+    def __init__(self, main_window):
         super().__init__()
         self.setupUi(self)
-
+        self.main_window = main_window
         self.detailGroupBox.hide()
 
         # mysql 접속
@@ -191,7 +192,7 @@ class WindowClass(QMainWindow, from_class):
         if self.remote.is_connected():
             self.remote.close()
             print("데이터베이스 연결종료")
-        self.close()
+            exit_signal.exit_application(self.main_window)
 
 
 if __name__ == "__main__":

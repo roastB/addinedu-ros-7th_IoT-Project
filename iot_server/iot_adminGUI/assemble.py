@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import *
 from park_user_1 import WindowClass as pu1
 from main import WindowClass as m
+from record import WindowClass as r
 
 
 class MainWindow(QMainWindow):
@@ -12,6 +13,7 @@ class MainWindow(QMainWindow):
         tabs = QTabWidget()
         tabs.addTab(pu1(self), "Sign Up")
         tabs.addTab(m(self), "Administration")
+        tabs.addTab(r(self), "Parking Log")
         self.setCentralWidget(tabs)
 
         tabs.setStyleSheet("""
