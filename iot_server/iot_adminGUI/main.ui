@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>950</width>
-    <height>876</height>
+    <height>875</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
      <x>20</x>
      <y>30</y>
      <width>681</width>
-     <height>821</height>
+     <height>411</height>
     </rect>
    </property>
   </widget>
@@ -120,8 +120,8 @@
   <widget class="QPushButton" name="btnExit">
    <property name="geometry">
     <rect>
-     <x>830</x>
-     <y>480</y>
+     <x>840</x>
+     <y>840</y>
      <width>89</width>
      <height>25</height>
     </rect>
@@ -133,10 +133,10 @@
   <widget class="QPushButton" name="one">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>30</y>
-     <width>131</width>
-     <height>111</height>
+     <x>290</x>
+     <y>40</y>
+     <width>71</width>
+     <height>81</height>
     </rect>
    </property>
    <property name="text">
@@ -146,10 +146,10 @@
   <widget class="QPushButton" name="two">
    <property name="geometry">
     <rect>
-     <x>580</x>
-     <y>30</y>
-     <width>121</width>
-     <height>111</height>
+     <x>560</x>
+     <y>40</y>
+     <width>71</width>
+     <height>81</height>
     </rect>
    </property>
    <property name="text">
@@ -159,10 +159,10 @@
   <widget class="QPushButton" name="three">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>330</y>
-     <width>131</width>
-     <height>101</height>
+     <x>290</x>
+     <y>350</y>
+     <width>71</width>
+     <height>81</height>
     </rect>
    </property>
    <property name="text">
@@ -172,10 +172,10 @@
   <widget class="QPushButton" name="four">
    <property name="geometry">
     <rect>
-     <x>580</x>
-     <y>340</y>
-     <width>121</width>
-     <height>101</height>
+     <x>560</x>
+     <y>350</y>
+     <width>71</width>
+     <height>81</height>
     </rect>
    </property>
    <property name="text">
@@ -221,19 +221,6 @@
     <string>관리자 화면</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="showCharge">
-   <property name="geometry">
-    <rect>
-     <x>720</x>
-     <y>480</y>
-     <width>89</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>요금 조회</string>
-   </property>
-  </widget>
   <widget class="QDateTimeEdit" name="entryLog">
    <property name="geometry">
     <rect>
@@ -254,7 +241,7 @@
    <property name="geometry">
     <rect>
      <x>790</x>
-     <y>310</y>
+     <y>320</y>
      <width>113</width>
      <height>25</height>
     </rect>
@@ -263,11 +250,11 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QLabel" name="exitLabel_2">
+  <widget class="QLabel" name="carCount">
    <property name="geometry">
     <rect>
      <x>710</x>
-     <y>310</y>
+     <y>320</y>
      <width>67</width>
      <height>17</height>
     </rect>
@@ -279,10 +266,10 @@
   <widget class="QLabel" name="ParkingGuideBoard">
    <property name="geometry">
     <rect>
-     <x>150</x>
-     <y>30</y>
-     <width>431</width>
-     <height>821</height>
+     <x>370</x>
+     <y>110</y>
+     <width>161</width>
+     <height>221</height>
     </rect>
    </property>
    <property name="text">
@@ -292,10 +279,10 @@
   <widget class="QGraphicsView" name="GuideLED_1">
    <property name="geometry">
     <rect>
-     <x>760</x>
-     <y>670</y>
-     <width>81</width>
-     <height>61</height>
+     <x>450</x>
+     <y>330</y>
+     <width>41</width>
+     <height>41</height>
     </rect>
    </property>
   </widget>
@@ -303,7 +290,7 @@
    <property name="geometry">
     <rect>
      <x>710</x>
-     <y>240</y>
+     <y>280</y>
      <width>67</width>
      <height>17</height>
     </rect>
@@ -316,6 +303,19 @@
    <property name="geometry">
     <rect>
      <x>790</x>
+     <y>280</y>
+     <width>113</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="readOnly">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="parkTime">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
      <y>240</y>
      <width>113</width>
      <height>25</height>
@@ -323,6 +323,32 @@
    </property>
    <property name="readOnly">
     <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="parkTimeLabel">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>240</y>
+     <width>67</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>주차시간</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnClear">
+   <property name="geometry">
+    <rect>
+     <x>848</x>
+     <y>410</y>
+     <width>51</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>clear</string>
    </property>
   </widget>
  </widget>

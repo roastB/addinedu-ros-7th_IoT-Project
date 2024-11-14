@@ -4,48 +4,79 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import uic
 import mysql.connector
+import time
 from datetime import datetime
-
+import exit_signal
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType("main.ui")
 
+# 요금 업데이트용 쓰레드
+class Display(QThread):
+    update = pyqtSignal()
+
+    def __init__ (self, sec=0, parent=None):
+        super().__init__()
+        self.main = parent
+        self.running = True
+
+    def run(self):
+        while self.running == True:
+            self.update.emit()
+            time.sleep(1)
+        
+    def stop(self):
+        self.running = False
+
+
 class WindowClass(QtBaseClass, Ui_MainWindow):
-    def __init__(self):
+    def __init__(self, main_window):
         super().__init__()
         self.setupUi(self)
+        self.main_window = main_window
         
         # setSizeGripEnabled 추가
         self.setSizeGripEnabled(True)  # 크기 조절 가능하도록 설정
 
-        self.Name
-        self.Phone
-        self.Location
-        self.carNum
-        self.entryLabel.hide()
-        
-        self.entryLog.hide()
-        
-        self.showCharge.hide()
-        self.feeLabel.hide()
-        self.Fee.hide()
+        self.Fee.setText("")
+
         self.entryLog.setButtonSymbols(QDateTimeEdit.NoButtons)
         
+        #주차 자리 실시간 반영 쓰레드
+        self.parkcount = Display()
+        self.parkcount.daemon = True
+        self.parkcount.update.connect(self.activateCurrentPlace)
 
-        self.showCharge.clicked.connect(self.Charge)
+        #요금 정산 쓰레드
+        self.renewtimer = Display()
+        self.renewtimer.daemon = True
+        self.renewtimer.update.connect(self.calculateCharge)
+
         self.one.clicked.connect(lambda: self.getInfo(1))
         self.two.clicked.connect(lambda: self.getInfo(2))
         self.three.clicked.connect(lambda: self.getInfo(3))
         self.four.clicked.connect(lambda: self.getInfo(4))
         self.btnExit.clicked.connect(self.Exit)
+        self.entryLog.hide()
+        self.btnClear.clicked.connect(self.Clear)
+
+        self.one.setEnabled(False)
+        self.two.setEnabled(False)
+        self.three.setEnabled(False)
+        self.four.setEnabled(False)
+
+        self.parklist = {'1': False, '2':False, '3':False, '4':False}
 
         self.remote = mysql.connector.connect(
-            host = "host",
-            port = "****",
-            user = "your name",
-            password = "****",
-            database = "your database"
+            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
+            port = 3306,
+            user = "root",
+            password = "Dbsalstjq128!",
+            database = "iot"
         )
         self.cur = self.remote.cursor()
+        # 데이터베이스 커넥션 생성 시 자동 커밋을 설정합니다.
+        self.startCurrentPlace()
+
 
         # [1] ParkingGuide_Line
         self.pixmap = QPixmap(self.ParkingGuideBoard.width(), self.ParkingGuideBoard.height())
@@ -109,45 +140,121 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         painter.drawLine(245, 350, 415, 350)
 
         painter.end()
-    def Charge(self):
-        self.Fee.show()
-        self.feeLabel.show()
-        self.Fee.setText("")
 
-        sql = "select p.entry_log, m.kind from parklog p join membership m on p.id = m.id where p.name like '%"+self.Name.text()+"'"
+### 함수 영역 ###
 
-        dt_now = datetime.now()
+## 정보 조회 초기화
 
-        self.cur.execute(sql)
-        
-        dt_entry, kind = self.cur.fetchall()[0]
-        
-        match kind:
-            case "EV":
-                fee = 10
-            case "경차":
-                fee = 5
-            case default:
-                fee = 20
-        
-        dt_result = (dt_now-dt_entry).seconds * fee
-        
-        self.Fee.setText(str(dt_result)+"원")
+    def Clear(self):
+        self.Name.setText("")
+        self.Phone.setText("")
+        self.carNum.setText("")
+        self.Location.setText("")
+        self.parkTime.setText("")
+        self.Fee.hide()
+        self.feeLabel.hide()
+        self.parkTime.hide()
+        self.parkTimeLabel.hide()
 
         
+## 주차장 자리 최신화 ##
+    # 데이터베이스 갱신을 위한 함수
+    def connectDatabase(self):
+        print("데이터베이스 연결")
+        self.remote = mysql.connector.connect(
+            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
+            port = 3306,
+            user = "root",
+            password = "Dbsalstjq128!",
+            database = "iot"
+        )
+        self.cur = self.remote.cursor()
 
-    def getInfo(self, num):
-        self.Fee.setText("")
-        self.showCharge.show()
-        self.entryLabel.show()
-        self.entryLog.show()
-        sql = "select name, phone, car_num, location, entry_log from parklog where location = " + str(num)
+    def startCurrentPlace(self):
+        self.parkcount.running = True
+        self.parkcount.start()
+
+    def stopCurrentPlace(self):
+        self.parkcount.running = False
+        self.parkcount.stop()
+
+    def activateCurrentPlace(self):
+        self.remote.close()
+        self.connectDatabase()
+
+        sql = "select location from parklog where entry_log is not NULL and exit_log is NULL;"
         self.cur.execute(sql)
         result = self.cur.fetchall()
-        self.btnClicked(result)
+        self.parklist = {'1': False, '2':False, '3':False, '4':False}
+        
+        count = 0
+
+        for each in result:
+            each = each[0]
+            self.parklist[f'{each}']=True
+            count += 1
+        
+        self.CountBox.setText(str(count))
+        self.currentPlace()
+
+    def currentPlace(self):
+        print(self.parklist)
+
+        if self.parklist['1'] == True:
+            self.one.setStyleSheet("background-color: #3498db; color: black;")
+            self.one.setEnabled(True)
+        else:
+            self.one.setStyleSheet("background-color: #939a98; color: black;")
+            self.one.setEnabled(False)
+        
+        if self.parklist['2'] == True:
+            self.two.setStyleSheet("background-color: #3498db; color: black;")
+            self.two.setEnabled(True)
+        else:
+            self.two.setStyleSheet("background-color: #939a98; color: black;")
+            self.two.setEnabled(False)
+        
+        if self.parklist['3'] == True:
+            self.three.setStyleSheet("background-color: #3498db; color: black;")
+            self.three.setEnabled(True)
+        else:
+            self.three.setStyleSheet("background-color: #939a98; color: black;")
+            self.three.setEnabled(False)
+        
+        if self.parklist['4'] == True:
+            self.four.setStyleSheet("background-color: #3498db; color: black;")
+            self.four.setEnabled(True)
+        else:
+            self.four.setStyleSheet("background-color: #939a98; color: black;")
+            self.four.setEnabled(False)
+##
+
+## 주차 정보 조회 및 주차 요금 최신화 ##
+    def startDisplayCharge(self):
+        self.renewtimer.running = True
+        self.renewtimer.start()
+
+    def stopDisplayCharge(self):
+        self.renewtimer.running = False
+        self.renewtimer.stop()
 
 
-    def btnClicked(self, info):
+    def getInfo(self, num):
+        self.stopDisplayCharge()
+        self.Fee.setText("")
+        self.Fee.show()
+        self.feeLabel.show()
+        self.parkTime.show()
+        self.parkTimeLabel.show()
+        self.entryLabel.show()
+        self.entryLog.show()
+        sql = "select name, phone, car_num, location, entry_log from parklog where location = " + str(num) +" and exit_log is NULL"
+        self.cur.execute(sql)
+        result = self.cur.fetchall()
+        self.showInfo(result)
+
+    def showInfo(self, info):
+        self.startDisplayCharge()
         self.Name.setText(info[0][0])
         self.Phone.setText(info[0][1])
         self.carNum.setText(info[0][2])
@@ -155,35 +262,63 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         dt_entry = info[0][4]
         dt_entry = QDateTime(dt_entry.year, dt_entry.month, dt_entry.day, dt_entry.hour, dt_entry.minute, dt_entry.second)
         self.entryLog.setDateTime(dt_entry)
-        
-        #dt_exit = info[0][5]
-
-
-        # if dt_exit is None:
-        #     self.showCharge.hide()
-        #     self.Fee.hide()
-        #     self.feeLabel.hide()
-        # else:
-        #     self.showCharge.show()
-        
-        # try:
-        #     dt_exit = QDateTime(dt_exit.year, dt_exit.month, dt_exit.day, dt_exit.hour, dt_exit.minute, dt_exit.second)
-        #     self.exitLabel.show()
-        #     self.exitLog.show()
-        #     self.exitLog.setDateTime(dt_exit)
-        #     self.feeLabel.show()
-        #     self.Fee.show()
-        # except:
-        #     self.exitLabel.hide()
-        #     self.exitLog.hide()
+        self.calculateCharge()
     
+    
+    def calculateCharge(self):
+        sql = "select p.entry_log, m.kind from parklog p join membership m on p.id = m.id where p.name like '%"+self.Name.text()+"' and p.exit_log is NULL"
+        # 입차시간과 차종만 가져와.
 
+        self.cur.execute(sql)
+        try:
+            dt_entry, kind = self.cur.fetchall()[0]
+
+            self.showCharge(dt_entry, kind)
+        except:
+            pass
+        
+    
+    def showCharge(self, dt_entry, kind):
+        dt_now = datetime.now()
+        match kind:
+            case "EV":
+                fee = 75
+            case "경차":
+                fee = 50
+            case default:
+                fee = 100
+        try:
+            dt_day = (dt_now-dt_entry).days*1440  #일을 분으로 변환
+        except:
+            pass
+
+        dt_time = (dt_now-dt_entry).seconds//60 - 540 #시분초를 분으로 변환
+
+        dt_fee = (dt_day + dt_time) * fee
+
+        print("주차시간:", dt_entry)
+        print("현재시간:", dt_now)
+        print("주차요금:", str(dt_fee)+"원")
+        print("=====================================")
+        
+        self.Fee.setText(str(dt_fee)+"원")
+        self.parkTime.setText(str(dt_time)+"분")
+##
+
+## 프로그램 종료 ##
     def Exit(self):
         if self.remote.is_connected():
-            self.remote.close()
-            print("데이터베이스 연결종료")
-            
-        self.close()
+            #print("데이터베이스 연결종료")
+            self.renewtimer.running = False
+            #print("요금정산 쓰레드 종료")
+            self.parkcount.running = False
+
+            self.stopCurrentPlace()
+            #print("실시간 반영 종료")
+            self.renewtimer.stop()
+            exit_signal.exit_application(self.main_window)
+
+##
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
