@@ -67,11 +67,11 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.parklist = {'1': False, '2':False, '3':False, '4':False}
 
         self.remote = mysql.connector.connect(
-            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
+            host = "****",
             port = 3306,
             user = "root",
-            password = "Dbsalstjq128!",
-            database = "iot"
+            password = "****",
+            database = "****"
         )
         self.cur = self.remote.cursor()
         # 데이터베이스 커넥션 생성 시 자동 커밋을 설정합니다.
@@ -162,11 +162,11 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
     def connectDatabase(self):
         print("데이터베이스 연결")
         self.remote = mysql.connector.connect(
-            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
+            host = "****",
             port = 3306,
             user = "root",
-            password = "Dbsalstjq128!",
-            database = "iot"
+            password = "****",
+            database = "****"
         )
         self.cur = self.remote.cursor()
 
