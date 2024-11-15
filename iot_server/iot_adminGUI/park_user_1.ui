@@ -2118,7 +2118,7 @@ background-color: rgb(116, 125, 150);</string>
      <enum>Qt::AutoText</enum>
     </property>
     <property name="pixmap">
-     <pixmap>../../../../Downloads/logobarkgrounduserui2.jpg</pixmap>
+     <pixmap>data/background_user.jpg</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
