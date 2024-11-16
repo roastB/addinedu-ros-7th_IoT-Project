@@ -12,4 +12,5 @@ GUI를 통해 각 주차장의 실시간 운영 상태를 명확하게 확인할
 |개발환경|<img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=white"/> <img src="https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=Ubuntu&logoColor=white"/>|
 |언어|<img src="https://img.shields.io/badge/C++-F01F7A?style=for-the-badge&logo=cplusplus&logoColor=white"/> <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=Python&logoColor=white"/>|
 |GUI|<img src="https://img.shields.io/badge/PYQT-41CD52?style=for-the-badge&logo=cplusplus&logoColor=white"/>|
+|데이터베이스|<img src="https://img.shields.io/badge/MYSQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white"/>|
 
