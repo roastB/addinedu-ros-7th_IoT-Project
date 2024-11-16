@@ -9,5 +9,6 @@ GUI를 통해 각 주차장의 실시간 운영 상태를 명확하게 확인할
 ### 1-2.기술 스택
 |분류|기술|
 |---|---|
-|개발환경|<img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=white"/>|
+|개발환경|<img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=white"/>
+<img src="https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=Ubuntu&logoColor=white"/>|
 
