@@ -7,6 +7,7 @@
 GUI를 통해 각 주차장의 실시간 운영 상태를 명확하게 확인할 수 있으며,<br /> 
 출차 시에는 주차 요금을 자동으로 계산하여 이용 시간과 요금을 간편하게 관리할 수 있습니다.<br /> 
 ### 1-2.기술 스택
-|구분|상세|
+|분류|기술|
 |---|---|
+|개발환경|<img src="https://img.shields.io/badge/LINUX-#FCC624?style=for-the-badge&logo=linux&logoColor=white">|
 
