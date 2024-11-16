@@ -33,11 +33,11 @@ class WindowClass(QMainWindow, from_class):
             self.cbKind.addItem(kind)
 
         self.remote = mysql.connector.connect(
-            host = "****",
+            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
             port = 3306,
             user = "root",
-            password = "****",
-            database = "****"
+            password = "Dbsalstjq128!",
+            database = "iot"
         )
 
         self.cur = self.remote.cursor()
@@ -76,6 +76,7 @@ class WindowClass(QMainWindow, from_class):
 
     def exitClicked(self):
         if self.remote.is_connected():
+            self.remote.close()
             print("데이터베이스 연결종료")
             exit_signal.exit_application(self.main_window)
 

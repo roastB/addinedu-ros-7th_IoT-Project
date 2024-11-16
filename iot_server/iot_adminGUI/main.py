@@ -5,8 +5,9 @@ from PyQt5.QtCore import *
 from PyQt5 import uic
 import mysql.connector
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import exit_signal
+import time
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType("main.ui")
 
@@ -37,6 +38,9 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         # setSizeGripEnabled 추가
         self.setSizeGripEnabled(True)  # 크기 조절 가능하도록 설정
 
+        # 주차장 이미지 추가
+        self.add_parking_image() 
+
         self.Fee.setText("")
 
         self.entryLog.setButtonSymbols(QDateTimeEdit.NoButtons)
@@ -51,106 +55,85 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.renewtimer.daemon = True
         self.renewtimer.update.connect(self.calculateCharge)
 
-        self.one.clicked.connect(lambda: self.getInfo(1))
-        self.two.clicked.connect(lambda: self.getInfo(2))
-        self.three.clicked.connect(lambda: self.getInfo(3))
-        self.four.clicked.connect(lambda: self.getInfo(4))
+        self.left_1.clicked.connect(lambda: self.getInfo(1))
+        self.left_2.clicked.connect(lambda: self.getInfo(2))
+        self.right_1.clicked.connect(lambda: self.getInfo(3))
+        self.right_2.clicked.connect(lambda: self.getInfo(4))
         self.btnExit.clicked.connect(self.Exit)
         self.entryLog.hide()
         self.btnClear.clicked.connect(self.Clear)
 
-        self.one.setEnabled(False)
-        self.two.setEnabled(False)
-        self.three.setEnabled(False)
-        self.four.setEnabled(False)
+        self.left_1.setEnabled(False)
+        self.left_2.setEnabled(False)
+        self.right_1.setEnabled(False)
+        self.right_2.setEnabled(False)
 
         self.parklist = {'1': False, '2':False, '3':False, '4':False}
 
         self.remote = mysql.connector.connect(
-            host = "****",
+            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
             port = 3306,
             user = "root",
-            password = "****",
-            database = "****"
+            password = "Dbsalstjq128!",
+            database = "iot"
         )
         self.cur = self.remote.cursor()
         # 데이터베이스 커넥션 생성 시 자동 커밋을 설정합니다.
         self.startCurrentPlace()
 
+        ###################################################### 
+        # 각 라디오 버튼에 대한 독립적인 타이머 생성
+        timer = QTimer(self)
+        timer.timeout.connect(self.blink_led)  # timeout 신호가 발생할 때마다 blink_led 함수를 호출하도록 연결합니다.
+        timer.start(500) # timer.start(500)으로 타이머를 500ms 간격으로 시작합니다. 즉, timer.timeout 신호가 500ms마다 발생합니다.
+        self.count = 1
+        ######################################################
 
-        # [1] ParkingGuide_Line
-        self.pixmap = QPixmap(self.ParkingGuideBoard.width(), self.ParkingGuideBoard.height())
-        self.pixmap.fill(Qt.transparent)
-        self.ParkingGuideBoard.setPixmap(self.pixmap)
-        self.PathDisplay()
-
-        # [2] ParkingGuide_LED
-        self.scene = QGraphicsScene()
-        
-        # 적절한 위치 및 크기로 설정
-        self.GuideLED_1.setScene(self.scene)
-        self.GuideLED_1.setGeometry(344, 800, 50, 50)
-
-        # 원형 LED 생성
-        self.led_item = QGraphicsEllipseItem(0, 0, 20, 20)
-        self.led_item.setBrush(QBrush(QColor('white')))
-        self.led_item.setPen(QPen(Qt.NoPen))  # 테두리 없는 원
-        
-        # LED 아이템을 scene에 추가
-        self.scene.addItem(self.led_item)
-        self.led_on = False
-
-    # [2] ParkingGuide_LED
-    def toggle_led(self):
-        if self.led_on:
-            self.led_item.setBrush(QBrush(QColor('white')))  # LED OFF 상태
-        else:
-            self.led_item.setBrush(QBrush(QColor('red')))  # LED ON 상태
-        
-        self.led_on = not self.led_on
-
-    # [1] ParkingGuideLine
-    def PathDisplay(self):
-        painter = QPainter(self.ParkingGuideBoard.pixmap())
-
-        # Pen 설정
-        pen1 = QPen(Qt.red, 5, Qt.SolidLine)
-        pen2 = QPen(Qt.blue, 5, Qt.SolidLine)
-        pen3 = QPen(Qt.green, 5, Qt.SolidLine)
-        pen4 = QPen(Qt.yellow, 5, Qt.SolidLine)
-
-        # 1번 자리
-        painter.setPen(pen1)
-        painter.drawLine(215, 800, 215, 50)
-        painter.drawLine(215, 50, 15, 50)
-
-        # 2번 자리
-        painter.setPen(pen2)
-        painter.drawLine(230, 800, 230, 50)
-        painter.drawLine(230, 50, 415, 50)
-
-        # 3번 자리
-        painter.setPen(pen3)
-        painter.drawLine(200, 800, 200, 350)
-        painter.drawLine(200, 350, 15, 350)
-
-        # 4번 자리
-        painter.setPen(pen4)
-        painter.drawLine(245, 800, 245, 350)
-        painter.drawLine(245, 350, 415, 350)
-
-        painter.end()
-
+###############
 ### 함수 영역 ###
+###############
+
+############################################################################### 
+# 깜빡이는 LED 효과
+    def blink_led(self):
+        radio_button = getattr(self, f"radioButton_{self.count}")  # 현재 라디오 버튼 가져오기
+
+        radio_button.setStyleSheet("""
+            QRadioButton::indicator { 
+                width: 12px; 
+                height: 12px; 
+                border-radius: 6px;
+                background-color: yellow;
+                border: 2px solid black;
+            }
+        """)
+        #print(f"현재 ON : {self.count}")
+        
+        # 깜박임 효과를 위해 일정 시간 후에 OFF 상태로 전환
+        QTimer.singleShot(250, lambda rb=radio_button: rb.setStyleSheet("""
+            QRadioButton::indicator { 
+                width: 12px; 
+                height: 12px; 
+                border-radius: 6px;
+                background-color: white;
+                border: 2px solid black;
+            }
+        """))
+        #print(f"현재 OFF : {self.count}")
+        
+        self.count += 1
+        if self.count > 24:
+            self.count = 1
+############################################################################### 
 
 ## 정보 조회 초기화
-
     def Clear(self):
         self.Name.setText("")
         self.Phone.setText("")
         self.carNum.setText("")
         self.Location.setText("")
         self.parkTime.setText("")
+        self.entryLog.setDateTime(QDateTime(2024, 1, 1, 0, 0))
         self.Fee.hide()
         self.feeLabel.hide()
         self.parkTime.hide()
@@ -160,13 +143,12 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
 ## 주차장 자리 최신화 ##
     # 데이터베이스 갱신을 위한 함수
     def connectDatabase(self):
-        print("데이터베이스 연결")
         self.remote = mysql.connector.connect(
-            host = "****",
+            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
             port = 3306,
             user = "root",
-            password = "****",
-            database = "****"
+            password = "Dbsalstjq128!",
+            database = "iot"
         )
         self.cur = self.remote.cursor()
 
@@ -198,35 +180,43 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.currentPlace()
 
     def currentPlace(self):
-        print(self.parklist)
 
         if self.parklist['1'] == True:
-            self.one.setStyleSheet("background-color: #3498db; color: black;")
-            self.one.setEnabled(True)
+            self.left_1.setStyleSheet("background-color: #3498db; color: black;")
+            self.left_1.setEnabled(True)
         else:
-            self.one.setStyleSheet("background-color: #939a98; color: black;")
-            self.one.setEnabled(False)
+            self.left_1.setStyleSheet("background-color: #939a98; color: black;")
+            self.left_1.setEnabled(False)
         
         if self.parklist['2'] == True:
-            self.two.setStyleSheet("background-color: #3498db; color: black;")
-            self.two.setEnabled(True)
+            self.left_2.setStyleSheet("background-color: #3498db; color: black;")
+            self.left_2.setEnabled(True)
         else:
-            self.two.setStyleSheet("background-color: #939a98; color: black;")
-            self.two.setEnabled(False)
+            self.left_2.setStyleSheet("background-color: #939a98; color: black;")
+            self.left_2.setEnabled(False)
         
         if self.parklist['3'] == True:
-            self.three.setStyleSheet("background-color: #3498db; color: black;")
-            self.three.setEnabled(True)
+            self.right_1.setStyleSheet("background-color: #3498db; color: black;")
+            self.right_1.setEnabled(True)
         else:
-            self.three.setStyleSheet("background-color: #939a98; color: black;")
-            self.three.setEnabled(False)
+            self.right_1.setStyleSheet("background-color: #939a98; color: black;")
+            self.right_1.setEnabled(False)
         
         if self.parklist['4'] == True:
-            self.four.setStyleSheet("background-color: #3498db; color: black;")
-            self.four.setEnabled(True)
+            self.right_2.setStyleSheet("background-color: #3498db; color: black;")
+            self.right_2.setEnabled(True)
         else:
-            self.four.setStyleSheet("background-color: #939a98; color: black;")
-            self.four.setEnabled(False)
+            self.right_2.setStyleSheet("background-color: #939a98; color: black;")
+            self.right_2.setEnabled(False)
+        
+        self.else_1.setStyleSheet("background-color: #3498db; color: black;")
+        self.else_1.setEnabled(False)
+        self.else_2.setStyleSheet("background-color: #3498db; color: black;")
+        self.else_2.setEnabled(False)
+        self.else_3.setStyleSheet("background-color: #3498db; color: black;")
+        self.else_3.setEnabled(False)
+        self.else_4.setStyleSheet("background-color: #3498db; color: black;")
+        self.else_4.setEnabled(False)
 ##
 
 ## 주차 정보 조회 및 주차 요금 최신화 ##
@@ -259,7 +249,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.Phone.setText(info[0][1])
         self.carNum.setText(info[0][2])
         self.Location.setText(info[0][3])
-        dt_entry = info[0][4]
+        dt_entry = info[0][4] + timedelta(hours=9)
         dt_entry = QDateTime(dt_entry.year, dt_entry.month, dt_entry.day, dt_entry.hour, dt_entry.minute, dt_entry.second)
         self.entryLog.setDateTime(dt_entry)
         self.calculateCharge()
@@ -280,6 +270,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
     
     def showCharge(self, dt_entry, kind):
         dt_now = datetime.now()
+        dt_entry = dt_entry + timedelta(hours=9)
         match kind:
             case "EV":
                 fee = 75
@@ -292,30 +283,44 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         except:
             pass
 
-        dt_time = (dt_now-dt_entry).seconds//60 - 540 #시분초를 분으로 변환
+        dt_time = (dt_now-dt_entry).seconds//60 #시분초를 분으로 변환
 
         dt_fee = (dt_day + dt_time) * fee
-
-        print("주차시간:", dt_entry)
-        print("현재시간:", dt_now)
-        print("주차요금:", str(dt_fee)+"원")
-        print("=====================================")
         
         self.Fee.setText(str(dt_fee)+"원")
         self.parkTime.setText(str(dt_time)+"분")
 ##
 
+    def add_parking_image(self):
+        parking_graphics_view = self.findChild(QGraphicsView, "graphicsView")
+
+        scene = parking_graphics_view.scene()
+        if scene is None:
+            # 새로운 QGraphicsScene을 생성하고 graphicsView에 할당
+            scene = QGraphicsScene()
+            parking_graphics_view.setScene(scene)
+
+        pixmap = QPixmap("image/parkinglot2.png")
+        pixmap_item = QGraphicsPixmapItem(pixmap)
+        scene.addItem(pixmap_item)
+
+        view_width = 655
+        view_height = 405
+
+        # 이미지 크기를 QGraphicsView 크기에 맞게 조정
+        pixmap_item.setPixmap(pixmap.scaled(view_width, view_height, Qt.IgnoreAspectRatio))
+
+        # 이미지의 위치를 조정하려면 setPos를 사용합니다.
+        pixmap_item.setPos(20, 30)  # 좌표 (0, 0)에 이미지를 배치
+
+
 ## 프로그램 종료 ##
     def Exit(self):
         if self.remote.is_connected():
-            #print("데이터베이스 연결종료")
-            self.renewtimer.running = False
-            #print("요금정산 쓰레드 종료")
-            self.parkcount.running = False
-
             self.stopCurrentPlace()
-            #print("실시간 반영 종료")
-            self.renewtimer.stop()
+            self.stopDisplayCharge()
+            self.remote.close()
+            print("데이터베이스 연결종료")
             exit_signal.exit_application(self.main_window)
 
 ##
@@ -324,9 +329,5 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     myWindows = WindowClass()
     myWindows.show()
-
-    timer = QTimer()
-    timer.timeout.connect(myWindows.toggle_led)
-    timer.start(5000)  # 1초마다 ON/OFF 토글
 
     sys.exit(app.exec_())

@@ -17,11 +17,11 @@ class WindowClass(QMainWindow, from_class):
 
         # mysql 접속
         self.remote = mysql.connector.connect(
-            host = "****",
+            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
             port = 3306,
             user = "root",
-            password = "****",
-            database = "****"
+            password = "Dbsalstjq128!",
+            database = "iot"
         )
         self.cursor = self.remote.cursor()
 
@@ -71,14 +71,7 @@ class WindowClass(QMainWindow, from_class):
         self.init_carOutDT_1 = self.carOutDT_1.dateTime()
         self.init_carOutDT_2 = self.carOutDT_2.dateTime()
 
-        # [3] RecordWidget size 조정
-        auto_size = [0, 1, 4, 5, 6]
-        for i in auto_size:
-            self.dbRecordWidget.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-        self.dbRecordWidget.setColumnWidth(2, 100)
-        self.dbRecordWidget.setColumnWidth(3, 100)
-        self.dbRecordWidget.setColumnWidth(7, 135)
-        self.dbRecordWidget.setColumnWidth(8, 135)
+        self.ResizeWidget()
 
         # [핵심 코드]
         self.btnSearch.clicked.connect(self.Search)
@@ -87,8 +80,20 @@ class WindowClass(QMainWindow, from_class):
         self.btnDBClear.clicked.connect(self.RecordClear)
         self.btnExit.clicked.connect(self.Exit)
 
+    def ResizeWidget(self):
+        # RecordWidget size 조정
+        auto_size = [1, 4, 5, 6]
+        for i in auto_size:
+            self.dbRecordWidget.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+        self.dbRecordWidget.setColumnWidth(0, 50) #RFID
+        self.dbRecordWidget.setColumnWidth(2, 110) #RFID
+        self.dbRecordWidget.setColumnWidth(3, 100) #전화번호
+        self.dbRecordWidget.setColumnWidth(7, 155) #입차시간
+        self.dbRecordWidget.setColumnWidth(8, 155) #출차시간
+
 
     def Search(self):
+        self.ResizeWidget()
         name = self.nameBox.currentText()
         phone_num = self.phoneBox.currentText()
         car_num = self.carNumBox.currentText()
