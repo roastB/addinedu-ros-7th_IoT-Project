@@ -8,6 +8,7 @@ import time
 from datetime import datetime, timedelta
 import exit_signal
 import time
+import pyqtgraph as pg
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType("main.ui")
 
@@ -78,15 +79,92 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             database = "iot"
         )
         self.cur = self.remote.cursor()
+
         # 데이터베이스 커넥션 생성 시 자동 커밋을 설정합니다.
         self.startCurrentPlace()
 
-        ###################################################### 
+        #############################################################################
+        #############################################################################
+        self.SalesGraph = self.findChild(QWidget, "graphicsView_2")
+
+        if self.SalesGraph is not None:
+            black_layout = QVBoxLayout(self.SalesGraph)  # black_layout이라는 QVBoxLayout을 SalesGraph 위젯에 설정
+            self.SalesGraph.setLayout(black_layout)  # SalesGraph 위젯에 레이아웃 설정
+
+            # 첫 번째 그래프에 표시할 데이터
+            x = [1, 3, 5, 7, 9, 11]     # x:날짜
+            y = [4, 7, 10, 49, 50, 45]  # y:금일매출, 주차한 차량 수 등등
+            # 두 번째 그래프에 표시할 데이터
+            x2 = [2, 4, 6, 8, 10]     # x: 다른 데이터 (예: 주차된 차량 수)
+            y2 = [1, 3, 7, 25, 30]    # y: 또 다른 데이터 (예: 주차된 차량의 수 변화)
+
+            self.Graph_1 = pg.PlotWidget(self)
+            black_layout.addWidget(self.Graph_1) 
+
+            self.Graph_2 = pg.PlotWidget(self)
+            black_layout.addWidget(self.Graph_2)
+
+            self.Graph_1.plot(
+                x,
+                y,  # 데이터 값
+                title='Plot test',  # 그래프의 제목
+                pen='r',  # 그래프 선의 색을 빨간색으로 설정
+                symbol='o',  # 데이터 점을 원형('o')으로 표시
+                symbolPen='g',  # 데이터 점의 외곽선 색을 초록색('g')으로 설정
+                symbolBrush=0.3  # 데이터 점의 채우기 색의 투명도 설정 (0.2는 낮은 투명도)
+            )
+            self.Graph_1.showGrid(x=True, y=True)  
+            self.Graph_1.setTitle('매출 통계')
+
+            self.Graph_2.plot(
+                x2,
+                y2,  # 데이터 값
+                title='Plot test 2',  # 그래프의 제목
+                pen='b',  # 그래프 선의 색을 파란색으로 설정
+                symbol='x',  # 데이터 점을 'x'로 표시
+                symbolPen='y',  # 데이터 점의 외곽선 색을 노란색으로 설정
+                symbolBrush=0.3  # 데이터 점의 채우기 색의 투명도 설정 (0.4는 더 높은 투명도)
+            )
+            self.Graph_2.showGrid(x=True, y=True)  
+            self.Graph_2.setTitle('주차된 차량 수')
+        else:
+            print("SalesGraph:graphicsView_2 위젯을 찾을 수 없습니다.")
+
+
+        #############################################################################
+        #############################################################################
+
+        All_empty = "sig0"
+        Left_1 = "sig1"
+        Left_2 = "sig2"
+        Right_1 = "sig3"
+        Right_2 = "sig4"
+
+        ##########################################
+        ## *여기로 아두이노에서 신호 읽어서 사용할 예정! ##
+        ##########################################
+        self.signal = "sig1"
+
         # 각 라디오 버튼에 대한 독립적인 타이머 생성
         timer = QTimer(self)
-        timer.timeout.connect(self.blink_led)  # timeout 신호가 발생할 때마다 blink_led 함수를 호출하도록 연결합니다.
+        # timer.timeout.connect(self.blink_led)  # timeout 신호가 발생할 때마다 blink_led 함수를 호출하도록 연결합니다.
+
+        if self.signal == All_empty:
+            timer.timeout.connect(self.blink_led_ALL)
+        elif self.signal == Left_1:
+            timer.timeout.connect(self.blink_led_L1)
+        elif self.signal == Left_2:
+            timer.timeout.connect(self.blink_led_L2)
+        elif self.signal == Right_1:
+            timer.timeout.connect(self.blink_led_R1)
+        elif self.signal == Right_2:
+            timer.timeout.connect(self.blink_led_R2)
+        else:
+            print("차량 기다리는 중~")
+
         timer.start(500) # timer.start(500)으로 타이머를 500ms 간격으로 시작합니다. 즉, timer.timeout 신호가 500ms마다 발생합니다.
         self.count = 1
+        self.repeat = 0
         ######################################################
 
 ###############
@@ -94,10 +172,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
 ###############
 
 ############################################################################### 
-# 깜빡이는 LED 효과
-    def blink_led(self):
-        radio_button = getattr(self, f"radioButton_{self.count}")  # 현재 라디오 버튼 가져오기
-
+    def Bright_LED(self, radio_button):
         radio_button.setStyleSheet("""
             QRadioButton::indicator { 
                 width: 12px; 
@@ -107,9 +182,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
                 border: 2px solid black;
             }
         """)
-        #print(f"현재 ON : {self.count}")
         
-        # 깜박임 효과를 위해 일정 시간 후에 OFF 상태로 전환
         QTimer.singleShot(250, lambda rb=radio_button: rb.setStyleSheet("""
             QRadioButton::indicator { 
                 width: 12px; 
@@ -119,11 +192,66 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
                 border: 2px solid black;
             }
         """))
-        #print(f"현재 OFF : {self.count}")
+
+    # blink_led (전체 비어있음)
+    def blink_led_ALL(self):
+        # 버전1
+        # for i in range(1, 17):  # Assuming you have 16 radio buttons (1 to 16)
+        #     radio_button = getattr(self, f"radioButton_{i}")
+        #     self.Bright_LED(radio_button)
+
+        #     if self.count > 16:
+        #          self.count = 1
         
+        # 버전2
+        radio_button = getattr(self, f"radioButton_{self.count}")  # 현재 라디오 버튼 가져오기
+        self.Bright_LED(radio_button)
+    
         self.count += 1
-        if self.count > 24:
+        if self.count > 16:
             self.count = 1
+
+    # blink_led_L1 (L_1 비어있음)
+    def blink_led_L1(self):
+        Lelf_1_route = [1, 2, 3, 4, 9, 10]
+        radio_button = getattr(self, f"radioButton_{Lelf_1_route[self.repeat]}")  # 현재 라디오 버튼 가져오기
+        self.Bright_LED(radio_button)
+
+        self.repeat += 1
+        if self.repeat > 5:
+            self.repeat = 0
+
+    # blink_led_L2 (L_2 비어있음)
+    def blink_led_L2(self):
+        Lelf_2_route = [1, 2, 3, 4, 5, 6, 7, 8, 13, 14]
+        radio_button = getattr(self, f"radioButton_{Lelf_2_route[self.repeat]}")  # 현재 라디오 버튼 가져오기
+        self.Bright_LED(radio_button)
+
+        self.repeat += 1
+        if self.repeat > 9:
+            self.repeat = 0
+
+
+    # blink_led_R1 (R_1 비어있음)
+    def blink_led_R1(self):
+        Right_1_route = [1, 2, 3, 4, 11, 12]
+        radio_button = getattr(self, f"radioButton_{Right_1_route[self.repeat]}")  # 현재 라디오 버튼 가져오기
+        self.Bright_LED(radio_button)
+
+        self.repeat += 1
+        if self.repeat > 5:
+            self.repeat = 0
+
+    # blink_led_R2 (R_2 비어있음)
+    def blink_led_R2(self):
+        Right_2_route = [1, 2, 3, 4, 5, 6, 7, 8, 15, 16]
+        radio_button = getattr(self, f"radioButton_{Right_2_route[self.repeat]}")  # 현재 라디오 버튼 가져오기
+        self.Bright_LED(radio_button)
+
+        self.repeat += 1
+        if self.repeat > 9:
+            self.repeat = 0
+
 ############################################################################### 
 
 ## 정보 조회 초기화

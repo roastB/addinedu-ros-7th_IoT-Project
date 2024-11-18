@@ -12,7 +12,7 @@ class MainWindow(QMainWindow):
         self.resize(950, 950)
         tabs = QTabWidget()
         tabs.addTab(pu1(self), "Sign Up")
-        tabs.addTab(m(self), "Administration")
+        tabs.addTab(m(self), "Monitoring")
         tabs.addTab(r(self), "Parking Log")
         self.setCentralWidget(tabs)
 
