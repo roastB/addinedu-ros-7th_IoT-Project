@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import exit_signal
 import time
 import pyqtgraph as pg
+import itertools
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType("main.ui")
 
@@ -56,10 +57,10 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.renewtimer.daemon = True
         self.renewtimer.update.connect(self.calculateCharge)
 
-        self.left_1.clicked.connect(lambda: self.getInfo(1))
-        self.left_2.clicked.connect(lambda: self.getInfo(2))
-        self.right_1.clicked.connect(lambda: self.getInfo(3))
-        self.right_2.clicked.connect(lambda: self.getInfo(4))
+        self.left_1.clicked.connect(lambda: self.getInfo('LEFT_1'))
+        self.left_2.clicked.connect(lambda: self.getInfo('LEFT_2'))
+        self.right_1.clicked.connect(lambda: self.getInfo('RIGHT_1'))
+        self.right_2.clicked.connect(lambda: self.getInfo('RIGHT_2'))
         self.btnExit.clicked.connect(self.Exit)
         self.entryLog.hide()
         self.btnClear.clicked.connect(self.Clear)
@@ -69,7 +70,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.right_1.setEnabled(False)
         self.right_2.setEnabled(False)
 
-        self.parklist = {'1': False, '2':False, '3':False, '4':False}
+        self.parklist = {'LEFT_1': False, 'LEFT_2':False, 'RIGHT_1':False, 'RIGHT_2':False}
 
         self.remote = mysql.connector.connect(
             host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
@@ -82,9 +83,8 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
 
         # 데이터베이스 커넥션 생성 시 자동 커밋을 설정합니다.
         self.startCurrentPlace()
+        
 
-        #############################################################################
-        #############################################################################
         self.SalesGraph = self.findChild(QWidget, "graphicsView_2")
 
         if self.SalesGraph is not None:
@@ -129,49 +129,114 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             self.Graph_2.setTitle('주차된 차량 수')
         else:
             print("SalesGraph:graphicsView_2 위젯을 찾을 수 없습니다.")
-
-
-        #############################################################################
-        #############################################################################
-
-        All_empty = "sig0"
-        Left_1 = "sig1"
-        Left_2 = "sig2"
-        Right_1 = "sig3"
-        Right_2 = "sig4"
-
-        ##########################################
-        ## *여기로 아두이노에서 신호 읽어서 사용할 예정! ##
-        ##########################################
-        self.signal = "sig1"
-
+    
+        ###################################################################
+        ## 주차중인 차량 갯수와 자리에 따라 LED 제어 : [1] LED 몇개 켜야하는지 판단! ##
+        ###################################################################
         # 각 라디오 버튼에 대한 독립적인 타이머 생성
-        timer = QTimer(self)
-        # timer.timeout.connect(self.blink_led)  # timeout 신호가 발생할 때마다 blink_led 함수를 호출하도록 연결합니다.
+        self.timer = QTimer(self)
+        self.repeat = [i for i in range(1, 17)]
 
-        if self.signal == All_empty:
-            timer.timeout.connect(self.blink_led_ALL)
-        elif self.signal == Left_1:
-            timer.timeout.connect(self.blink_led_L1)
-        elif self.signal == Left_2:
-            timer.timeout.connect(self.blink_led_L2)
-        elif self.signal == Right_1:
-            timer.timeout.connect(self.blink_led_R1)
-        elif self.signal == Right_2:
-            timer.timeout.connect(self.blink_led_R2)
+        # 현재까지 주차중인 갯수 및 자리 찾는 쿼리문(Still Parking)
+        stillParking_sql = "SELECT p.id, p.name, p.location, p.exit_log, p.charge FROM membership m, parklog p WHERE m.id = p.id AND p.location not LIKE 'NY' AND p.exit_log is NULL;"
+        self.cur.execute(stillParking_sql)
+        stillP_result = self.cur.fetchall()
+        stillP_len = len(stillP_result)
+
+        # [1] LED 몇개 켜야하는지 판단!
+        if stillP_len == 0: # 모두 비워져있음.
+            self.timer.timeout.connect(self.blink_led_ALL)
+            
+        elif stillP_len == 1:  # 1곳이 주차 중 (3곳이 가능)
+            isParking_1 = stillP_result[0][2]
+            self.timer.timeout.connect(lambda: self.blink_led_THREE(isParking_1))
+
+        elif stillP_len == 2:  # 2곳이 주차 중 (2곳이 가능)
+            isParking_2 = [stillP_result[i][2] for i in range(2)]
+            self.timer.timeout.connect(lambda: self.blink_led_TWO(isParking_2))
+        
+        elif stillP_len == 3:  # 3곳이 주차 중 (1곳이 가능)
+            isParking_3 = [stillP_result[i][2] for i in range(3)]
+            self.timer.timeout.connect(lambda: self.blink_led_ONE(isParking_3))
+
         else:
-            print("차량 기다리는 중~")
+            print("죄송합니다. 현재는 만차입니다. 주차할 곳이 없습니다.")
 
-        timer.start(500) # timer.start(500)으로 타이머를 500ms 간격으로 시작합니다. 즉, timer.timeout 신호가 500ms마다 발생합니다.
-        self.count = 1
-        self.repeat = 0
-        ######################################################
+        self.timer.start(1000)
+
 
 ###############
 ### 함수 영역 ###
 ###############
 
-############################################################################### 
+    ##########################################################
+    ## 주차중인 차량 갯수와 자리에 따라 LED 제어 : [2] LED ON 함수  ##
+    ##########################################################
+    def blink_led_ALL(self):
+        for i in range(1, 17):
+            radio_button = getattr(self, f"radioButton_{i}")
+            self.Bright_LED(radio_button)
+
+    def blink_led_THREE(self, isParking_1):
+        if isParking_1 == "LEFT_1":
+            self.repeat = [x for x in self.repeat if x not in [9, 10]]
+    
+        elif isParking_1 == "LEFT_2":
+            self.repeat = [x for x in self.repeat if x not in [13, 14]]
+    
+        elif isParking_1 == "RIGHT_1":
+            self.repeat = [x for x in self.repeat if x not in [11, 12]]
+    
+        else:   # RIGHT_2
+            self.repeat = [x for x in self.repeat if x not in [15, 16]]
+    
+        for i in range(len(self.repeat)):
+            radio_button = getattr(self, f"radioButton_{self.repeat[i]}")  # self.repeat의 값을 사용하여 radio button을 가져옵니다.
+            self.Bright_LED(radio_button)
+    
+    def blink_led_TWO(self, isParking_2):
+        if 'LEFT_1' in isParking_2 and 'LEFT_2' in isParking_2:
+            self.repeat = [x for x in self.repeat if x not in [9, 10, 13, 14]]
+    
+        elif 'LEFT_1' in isParking_2 and 'RIGHT_1' in isParking_2:
+            self.repeat = [x for x in self.repeat if x not in [9, 10, 11, 12]]
+    
+        elif 'LEFT_1' in isParking_2 and 'RIGHT_2' in isParking_2:
+            self.repeat = [x for x in self.repeat if x not in [9, 10, 15, 16]]
+
+        elif 'LEFT_2' in isParking_2 and 'RIGHT_1' in isParking_2:
+            self.repeat = [x for x in self.repeat if x not in [11, 12, 13, 14]]
+
+        elif 'LEFT_2' in isParking_2 and 'RIGHT_2' in isParking_2:
+            self.repeat = [x for x in self.repeat if x not in [5, 6, 7, 8, 13, 14, 15, 16]]
+
+        elif 'RIGHT_1' in isParking_2 and 'RIGHT_2' in isParking_2:
+            self.repeat = [x for x in self.repeat if x not in [11, 12, 15, 16]]
+    
+        else:
+            print("에러 발생")
+    
+        for i in range(len(self.repeat)):
+            radio_button = getattr(self, f"radioButton_{self.repeat[i]}")  # self.repeat의 값을 사용하여 radio button을 가져옵니다.
+            self.Bright_LED(radio_button)
+
+    def blink_led_ONE(self, isParking_3):
+        if 'LEFT_1' not in isParking_3:
+            self.repeat = [x for x in self.repeat if x in [1,2,3,4,9,10]]
+    
+        elif 'LEFT_2' not in isParking_3:
+            self.repeat = [x for x in self.repeat if x in [1,2,3,4,5,6,7,8,13,14]]
+    
+        elif 'RIGHT_1' not in isParking_3:
+            self.repeat = [x for x in self.repeat if x in [1,2,3,4,11,12]]
+
+        else:   # RIGHT_2
+            self.repeat = [x for x in self.repeat if x in [1,2,3,4,5,6,7,8,15,16]]
+    
+        for i in range(len(self.repeat)):
+            radio_button = getattr(self, f"radioButton_{self.repeat[i]}")  # self.repeat의 값을 사용하여 radio button을 가져옵니다.
+            self.Bright_LED(radio_button)
+
     def Bright_LED(self, radio_button):
         radio_button.setStyleSheet("""
             QRadioButton::indicator { 
@@ -183,76 +248,26 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             }
         """)
         
-        QTimer.singleShot(250, lambda rb=radio_button: rb.setStyleSheet("""
-            QRadioButton::indicator { 
-                width: 12px; 
-                height: 12px; 
-                border-radius: 6px;
-                background-color: white;
-                border: 2px solid black;
-            }
-        """))
-
-    # blink_led (전체 비어있음)
-    def blink_led_ALL(self):
-        # 버전1
-        # for i in range(1, 17):  # Assuming you have 16 radio buttons (1 to 16)
-        #     radio_button = getattr(self, f"radioButton_{i}")
-        #     self.Bright_LED(radio_button)
-
-        #     if self.count > 16:
-        #          self.count = 1
-        
-        # 버전2
-        radio_button = getattr(self, f"radioButton_{self.count}")  # 현재 라디오 버튼 가져오기
-        self.Bright_LED(radio_button)
+        # # 깜빡이는 효과
+        # QTimer.singleShot(400, lambda rb=radio_button: rb.setStyleSheet("""
+        #    QRadioButton::indicator { 
+        #        width: 12px; 
+        #        height: 12px; 
+        #        border-radius: 6px;
+        #        background-color: white;
+        #        border: 2px solid black;
+        #    }
+        # """))
     
-        self.count += 1
-        if self.count > 16:
-            self.count = 1
-
-    # blink_led_L1 (L_1 비어있음)
-    def blink_led_L1(self):
-        Lelf_1_route = [1, 2, 3, 4, 9, 10]
-        radio_button = getattr(self, f"radioButton_{Lelf_1_route[self.repeat]}")  # 현재 라디오 버튼 가져오기
-        self.Bright_LED(radio_button)
-
-        self.repeat += 1
-        if self.repeat > 5:
-            self.repeat = 0
-
-    # blink_led_L2 (L_2 비어있음)
-    def blink_led_L2(self):
-        Lelf_2_route = [1, 2, 3, 4, 5, 6, 7, 8, 13, 14]
-        radio_button = getattr(self, f"radioButton_{Lelf_2_route[self.repeat]}")  # 현재 라디오 버튼 가져오기
-        self.Bright_LED(radio_button)
-
-        self.repeat += 1
-        if self.repeat > 9:
-            self.repeat = 0
-
-
-    # blink_led_R1 (R_1 비어있음)
-    def blink_led_R1(self):
-        Right_1_route = [1, 2, 3, 4, 11, 12]
-        radio_button = getattr(self, f"radioButton_{Right_1_route[self.repeat]}")  # 현재 라디오 버튼 가져오기
-        self.Bright_LED(radio_button)
-
-        self.repeat += 1
-        if self.repeat > 5:
-            self.repeat = 0
-
-    # blink_led_R2 (R_2 비어있음)
-    def blink_led_R2(self):
-        Right_2_route = [1, 2, 3, 4, 5, 6, 7, 8, 15, 16]
-        radio_button = getattr(self, f"radioButton_{Right_2_route[self.repeat]}")  # 현재 라디오 버튼 가져오기
-        self.Bright_LED(radio_button)
-
-        self.repeat += 1
-        if self.repeat > 9:
-            self.repeat = 0
-
 ############################################################################### 
+
+    def check_still_parking(self):
+        stillParking_sql = "SELECT p.id, p.name, p.location, p.exit_log, p.charge FROM membership m, parklog p WHERE m.id = p.id AND p.location not LIKE 'NY' AND p.exit_log is NULL;"
+        self.cur.execute(stillParking_sql)
+        stillP_result = self.cur.fetchall()
+        Num_still_parking = len(stillP_result)
+        print(f"현재 주차 중인 차량 수: {Num_still_parking}")
+
 
 ## 정보 조회 초기화
     def Clear(self):
@@ -295,7 +310,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         sql = "select location from parklog where entry_log is not NULL and exit_log is NULL;"
         self.cur.execute(sql)
         result = self.cur.fetchall()
-        self.parklist = {'1': False, '2':False, '3':False, '4':False}
+        self.parklist = {'LEFT_1': False, 'LEFT_2':False, 'RIGHT_1':False, 'RIGHT_2':False}
         
         count = 0
 
@@ -309,28 +324,28 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
 
     def currentPlace(self):
 
-        if self.parklist['1'] == True:
+        if self.parklist['LEFT_1'] == True:
             self.left_1.setStyleSheet("background-color: #3498db; color: black;")
             self.left_1.setEnabled(True)
         else:
             self.left_1.setStyleSheet("background-color: #939a98; color: black;")
             self.left_1.setEnabled(False)
         
-        if self.parklist['2'] == True:
+        if self.parklist['LEFT_2'] == True:
             self.left_2.setStyleSheet("background-color: #3498db; color: black;")
             self.left_2.setEnabled(True)
         else:
             self.left_2.setStyleSheet("background-color: #939a98; color: black;")
             self.left_2.setEnabled(False)
         
-        if self.parklist['3'] == True:
+        if self.parklist['RIGHT_1'] == True:
             self.right_1.setStyleSheet("background-color: #3498db; color: black;")
             self.right_1.setEnabled(True)
         else:
             self.right_1.setStyleSheet("background-color: #939a98; color: black;")
             self.right_1.setEnabled(False)
         
-        if self.parklist['4'] == True:
+        if self.parklist['RIGHT_2'] == True:
             self.right_2.setStyleSheet("background-color: #3498db; color: black;")
             self.right_2.setEnabled(True)
         else:
@@ -357,7 +372,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.renewtimer.stop()
 
 
-    def getInfo(self, num):
+    def getInfo(self, parkPlace):
         self.stopDisplayCharge()
         self.Fee.setText("")
         self.Fee.show()
@@ -366,7 +381,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.parkTimeLabel.show()
         self.entryLabel.show()
         self.entryLog.show()
-        sql = "select name, phone, car_num, location, entry_log from parklog where location = " + str(num) +" and exit_log is NULL"
+        sql = "select name, phone, car_num, location, entry_log from parklog where location = '" + parkPlace +"' and exit_log is NULL"
         self.cur.execute(sql)
         result = self.cur.fetchall()
         self.showInfo(result)
