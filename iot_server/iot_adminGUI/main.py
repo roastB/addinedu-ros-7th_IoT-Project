@@ -9,11 +9,11 @@ from datetime import datetime, timedelta
 import exit_signal
 import time
 import pyqtgraph as pg
-import itertools
+import pandas as pd
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType("main.ui")
 
-# 요금 업데이트용 쓰레드
+# 요금 업데이트용 스레드
 class Display(QThread):
     update = pyqtSignal()
 
@@ -38,7 +38,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.main_window = main_window
         
         # setSizeGripEnabled 추가
-        self.setSizeGripEnabled(True)  # 크기 조절 가능하도록 설정
+        self.setSizeGripEnabled(True)  # 크기 조정 가능하도록 설정
 
         # 주차장 이미지 추가
         self.add_parking_image() 
@@ -47,15 +47,20 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
 
         self.entryLog.setButtonSymbols(QDateTimeEdit.NoButtons)
         
-        #주차 자리 실시간 반영 쓰레드
+        # 주차 자리 실시간 반영 스레드
         self.parkcount = Display()
         self.parkcount.daemon = True
         self.parkcount.update.connect(self.activateCurrentPlace)
 
-        #요금 정산 쓰레드
+        # 요금 정산 스레드
         self.renewtimer = Display()
         self.renewtimer.daemon = True
         self.renewtimer.update.connect(self.calculateCharge)
+
+        # LED 제어 스레드
+        self.led_update_thread = Display()
+        self.led_update_thread.daemon = True
+        self.led_update_thread.update.connect(self.updateLEDStatus)
 
         self.left_1.clicked.connect(lambda: self.getInfo('LEFT_1'))
         self.left_2.clicked.connect(lambda: self.getInfo('LEFT_2'))
@@ -81,104 +86,71 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         )
         self.cur = self.remote.cursor()
 
-        # 데이터베이스 커넥션 생성 시 자동 커밋을 설정합니다.
+        # 데이터베이스 커넥션 생성 시 자동 커미팅을 설정합니다.
         self.startCurrentPlace()
+        self.startLEDUpdate()
 
-        #############################################################################
-        #############################################################################
         self.SalesGraph = self.findChild(QWidget, "graphicsView_2")
-
         if self.SalesGraph is not None:
-            black_layout = QVBoxLayout(self.SalesGraph)  # black_layout이라는 QVBoxLayout을 SalesGraph 위젯에 설정
-            self.SalesGraph.setLayout(black_layout)  # SalesGraph 위젯에 레이아웃 설정
-
-            # 첫 번째 그래프에 표시할 데이터
-            x = [1, 3, 5, 7, 9, 11]     # x:날짜
-            y = [4, 7, 10, 49, 50, 45]  # y:금일매출, 주차한 차량 수 등등
-            # 두 번째 그래프에 표시할 데이터
-            x2 = [2, 4, 6, 8, 10]     # x: 다른 데이터 (예: 주차된 차량 수)
-            y2 = [1, 3, 7, 25, 30]    # y: 또 다른 데이터 (예: 주차된 차량의 수 변화)
-
-            self.Graph_1 = pg.PlotWidget(self)
-            black_layout.addWidget(self.Graph_1) 
-
-            self.Graph_2 = pg.PlotWidget(self)
-            black_layout.addWidget(self.Graph_2)
-
-            self.Graph_1.plot(
-                x,
-                y,  # 데이터 값
-                title='Plot test',  # 그래프의 제목
-                pen='r',  # 그래프 선의 색을 빨간색으로 설정
-                symbol='o',  # 데이터 점을 원형('o')으로 표시
-                symbolPen='g',  # 데이터 점의 외곽선 색을 초록색('g')으로 설정
-                symbolBrush=0.3  # 데이터 점의 채우기 색의 투명도 설정 (0.2는 낮은 투명도)
-            )
-            self.Graph_1.showGrid(x=True, y=True)  
-            self.Graph_1.setTitle('매출 통계')
-
-            self.Graph_2.plot(
-                x2,
-                y2,  # 데이터 값
-                title='Plot test 2',  # 그래프의 제목
-                pen='b',  # 그래프 선의 색을 파란색으로 설정
-                symbol='x',  # 데이터 점을 'x'로 표시
-                symbolPen='y',  # 데이터 점의 외곽선 색을 노란색으로 설정
-                symbolBrush=0.3  # 데이터 점의 채우기 색의 투명도 설정 (0.4는 더 높은 투명도)
-            )
-            self.Graph_2.showGrid(x=True, y=True)  
-            self.Graph_2.setTitle('주차된 차량 수')
+            black_layout = QVBoxLayout(self.SalesGraph)
+            self.SalesGraph.setLayout(black_layout)
+            # 데이터베이스에서 데이터 가져오기
+            self.load_and_plot_data(black_layout)
         else:
             print("SalesGraph:graphicsView_2 위젯을 찾을 수 없습니다.")
-
-        #############################################################################
-        #############################################################################
     
-        ###################################################################
-        ## 주차중인 차량 갯수와 자리에 따라 LED 제어 : [1] LED 몇개 켜야하는지 판단! ##
-        ###################################################################
-
-        # 각 라디오 버튼에 대한 독립적인 타이머 생성
+    def load_and_plot_data(self, black_layout):
+        query = "SELECT exit_log, charge, location FROM parklog"
+        self.cur.execute(query)
+        data = self.cur.fetchall()
+        
+        df = pd.DataFrame(data, columns=["exit_log", "charge", "location"])
+        df["exit_log"] = pd.to_datetime(df["exit_log"])+timedelta(hours=9)
+        
+        df["10min_interval"] = df["exit_log"].dt.floor("10min")
+        charge_grouped = df.groupby("10min_interval")["charge"].sum().reset_index()
+        
+        x1 = charge_grouped["10min_interval"].dt.strftime('%H:%M').tolist()
+        y1 = charge_grouped["charge"].tolist()
+        
+        location_count = df["location"].value_counts().sort_index()
+        
+        x2 = location_count.index.tolist()
+        y2 = location_count.values.tolist()
+        
+        self.Graph_1 = pg.PlotWidget(self)
+        black_layout.addWidget(self.Graph_1)
+        self.Graph_2 = pg.PlotWidget(self)
+        black_layout.addWidget(self.Graph_2)
+        
+        bar1 = pg.BarGraphItem(x=list(range(len(x1))), height=y1, width=0.6, brush='r')
+        self.Graph_1.addItem(bar1)
+        self.Graph_1.getAxis('bottom').setTicks([[(i, x1[i]) for i in range(len(x1))]])
+        self.Graph_1.setTitle("10분 단위 금액")
+        self.Graph_1.showGrid(x=True, y=True)
+        
+        bar2 = pg.BarGraphItem(x=list(range(len(x2))), height=y2, width=0.6, brush='b')
+        self.Graph_2.addItem(bar2)
+        self.Graph_2.getAxis('bottom').setTicks([[(i, x2[i]) for i in range(len(x2))]])
+        self.Graph_2.setTitle("자리별 누적 주차 대수")
+        self.Graph_2.showGrid(x=True, y=True)
+        for i, value in enumerate(y1):
+            text_item = pg.TextItem(text=f"{int(value)}", anchor=(0.5, -0.5), color='white')
+            text_item.setPos(i, value)
+            self.Graph_1.addItem(text_item)
+        for i, value in enumerate(y2):
+            text_item = pg.TextItem(text=f"{int(value)}", anchor=(0.5, -0.5), color='white')
+            text_item.setPos(i, value)
+            self.Graph_2.addItem(text_item)
+        
         self.timer = QTimer(self)
-    
         self.repeat = [ i for i in range(1, 17)]
 
-        # 현재까지 주차중인 갯수 및 자리 찾는 쿼리문(Still Parking)
-        stillParking_sql = "SELECT p.id, p.name, p.location, p.exit_log FROM membership m, parklog p WHERE m.id = p.id AND p.location not LIKE 'NY' AND p.exit_log is NULL;"
-        self.cur.execute(stillParking_sql)
-        stillP_result = self.cur.fetchall()
-        stillP_len = len(stillP_result)
-
-        # [1] LED 몇개 켜야하는지 판단!
-        if stillP_len == 0: # 모두 비워져있음.
-            self.timer.timeout.connect(self.blink_led_ALL)
-            
-        elif stillP_len == 1:  # 1곳이 주차 중 (3곳이 가능)
-            isParking_1 = stillP_result[0][2]
-            self.timer.timeout.connect(lambda: self.blink_led_THREE(isParking_1))
-
-        elif stillP_len == 2:  # 2곳이 주차 중 (2곳이 가능)
-            isParking_2 = [stillP_result[i][2] for i in range(2)]
-            self.timer.timeout.connect(lambda: self.blink_led_TWO(isParking_2))
-        
-        elif stillP_len == 3:  # 3곳이 주차 중 (1곳이 가능)
-            isParking_3 = [stillP_result[i][2] for i in range(3)]
-            self.timer.timeout.connect(lambda: self.blink_led_ONE(isParking_3))
-
-        else:
-            print("죄송합니다. 현재는 만차입니다. 주차할 곳이 없습니다.")
-
+        self.updateLEDStatus()
         self.timer.start(1000)
 
-
-###############
-### 함수 영역 ###
-###############
-
-    ##########################################################
-    ## 주차중인 차량 갯수와 자리에 따라 LED 제어 : [2] LED ON 함수  ##
-    ##########################################################
-    
+### 함수 ###
+   
     def blink_led_ALL(self):
         for i in range(1, 17):
             radio_button = getattr(self, f"radioButton_{i}")
@@ -198,7 +170,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             self.repeat = [x for x in self.repeat if x not in [15, 16]]
     
         for i in range(len(self.repeat)):
-            radio_button = getattr(self, f"radioButton_{self.repeat[i]}")  # self.repeat의 값을 사용하여 radio button을 가져옵니다.
+            radio_button = getattr(self, f"radioButton_{self.repeat[i]}")  # self.repeat의 값을 사용하여 radio button을 가져올립니다.
             self.Bright_LED(radio_button)
     
     def blink_led_TWO(self, isParking_2):
@@ -224,7 +196,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             print("에러 발생")
     
         for i in range(len(self.repeat)):
-            radio_button = getattr(self, f"radioButton_{self.repeat[i]}")  # self.repeat의 값을 사용하여 radio button을 가져옵니다.
+            radio_button = getattr(self, f"radioButton_{self.repeat[i]}")  # self.repeat의 값을 사용하여 radio button을 가져올립니다.
             self.Bright_LED(radio_button)
 
     def blink_led_ONE(self, isParking_3):
@@ -241,7 +213,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             self.repeat = [x for x in self.repeat if x in [1,2,3,4,5,6,7,8,15,16]]
     
         for i in range(len(self.repeat)):
-            radio_button = getattr(self, f"radioButton_{self.repeat[i]}")  # self.repeat의 값을 사용하여 radio button을 가져옵니다.
+            radio_button = getattr(self, f"radioButton_{self.repeat[i]}")  # self.repeat의 값을 사용하여 radio button을 가져올립니다.
             self.Bright_LED(radio_button)
 
     def Bright_LED(self, radio_button):
@@ -265,9 +237,34 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             }
         """))
     
-############################################################################### 
+    def updateLEDStatus(self):
+        # 주차중인 개수 및 자리 업데이트
+        self.remote.close()
+        self.connectDatabase()
 
-## 정보 조회 초기화
+        stillParking_sql = "SELECT p.id, p.name, p.location, p.exit_log FROM membership m, parklog p WHERE m.id = p.id AND p.location not LIKE 'NY' AND p.exit_log is NULL;"
+        self.cur.execute(stillParking_sql)
+        stillP_result = self.cur.fetchall()
+        stillP_len = len(stillP_result)
+
+        self.repeat = [i for i in range(1, 17)]
+
+        if stillP_len == 0:  # 모든 자리 비어있음
+            self.blink_led_ALL()
+        elif stillP_len == 1:  # 1곳이 주차 중 (3곳이 가능)
+            isParking_1 = stillP_result[0][2]
+            self.blink_led_THREE(isParking_1)
+        elif stillP_len == 2:  # 2곳이 주차 중 (2곳이 가능)
+            isParking_2 = [stillP_result[i][2] for i in range(2)]
+            self.blink_led_TWO(isParking_2)
+        elif stillP_len == 3:  # 3곳이 주차 중 (1곳이 가능)
+            isParking_3 = [stillP_result[i][2] for i in range(3)]
+            self.blink_led_ONE(isParking_3)
+        else:
+            print("죄송합니다. 현재는 만차입니다. 주차할 곳이 없습니다.")
+
+
+## 정보 조회 초기화 ##
     def Clear(self):
         self.Name.setText("")
         self.Phone.setText("")
@@ -282,7 +279,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
 
         
 ## 주차장 자리 최신화 ##
-    # 데이터베이스 갱신을 위한 함수
+    # 데이터베이스 경시를 위한 함수
     def connectDatabase(self):
         self.remote = mysql.connector.connect(
             host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
@@ -300,6 +297,14 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
     def stopCurrentPlace(self):
         self.parkcount.running = False
         self.parkcount.stop()
+
+    def startLEDUpdate(self):
+        self.led_update_thread.running = True
+        self.led_update_thread.start()
+
+    def stopLEDUpdate(self):
+        self.led_update_thread.running = False
+        self.led_update_thread.stop()
 
     def activateCurrentPlace(self):
         self.remote.close()
@@ -358,7 +363,6 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.else_3.setEnabled(False)
         self.else_4.setStyleSheet("background-color: #3498db; color: black;")
         self.else_4.setEnabled(False)
-##
 
 ## 주차 정보 조회 및 주차 요금 최신화 ##
     def startDisplayCharge(self):
@@ -421,17 +425,16 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             case default:
                 fee = 100
         try:
-            dt_day = (dt_now-dt_entry).days*1440  #일을 분으로 변환
+            dt_day = (dt_now-dt_entry).days*1440  #일을 분으로 변화
         except:
             pass
 
-        dt_time = (dt_now-dt_entry).seconds//60 #시분초를 분으로 변환
+        dt_time = (dt_now-dt_entry).seconds//60 #시분초를 분으로 변화
 
         dt_fee = (dt_day + dt_time) * fee
         
         self.Fee.setText(str(dt_fee)+"원")
         self.parkTime.setText(str(dt_time)+"분")
-##
 
     def add_parking_image(self):
         parking_graphics_view = self.findChild(QGraphicsView, "graphicsView")
@@ -449,11 +452,9 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         view_width = 655
         view_height = 405
 
-        # 이미지 크기를 QGraphicsView 크기에 맞게 조정
         pixmap_item.setPixmap(pixmap.scaled(view_width, view_height, Qt.IgnoreAspectRatio))
 
-        # 이미지의 위치를 조정하려면 setPos를 사용합니다.
-        pixmap_item.setPos(20, 30)  # 좌표 (0, 0)에 이미지를 배치
+        pixmap_item.setPos(20, 30)  # 자포 (0, 0)에 이미지를 배치
 
 
 ## 프로그램 종료 ##
@@ -461,11 +462,11 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         if self.remote.is_connected():
             self.stopCurrentPlace()
             self.stopDisplayCharge()
+            self.stopLEDUpdate()
             self.remote.close()
             print("데이터베이스 연결종료")
             exit_signal.exit_application(self.main_window)
 
-##
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -473,3 +474,4 @@ if __name__ == "__main__":
     myWindows.show()
 
     sys.exit(app.exec_())
+

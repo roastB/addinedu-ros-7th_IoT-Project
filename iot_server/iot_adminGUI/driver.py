@@ -68,20 +68,18 @@ class WindowClass(QMainWindow, from_class):
         host = '192.168.2.117'  # 서버 IP 주소
         port = 65433        # 서버 포트 번호
 
-        # 소켓 생성
+        
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect((host, port))  # 서버에 연결
+        client_socket.connect((host, port))
 
-        # 데이터 전송
+        
         message = name+','+phone
         client_socket.send(message.encode('utf-8'))
 
-        # 서버 응답 수신
+        
         response_data = client_socket.recv(1024)
 
         decoded_data = response_data.decode('utf-8')
-
-        print(f"수신: {decoded_data}")
 
         responses = json.loads(decoded_data)
         num = len(responses)
@@ -89,7 +87,7 @@ class WindowClass(QMainWindow, from_class):
         for i in range(num):
             self.Add(responses[f'{i}'])
 
-        client_socket.close()  # 클라이언트 소켓 닫기
+        client_socket.close()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
