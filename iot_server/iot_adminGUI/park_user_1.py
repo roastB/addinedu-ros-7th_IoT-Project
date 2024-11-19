@@ -69,6 +69,9 @@ class WindowClass(QMainWindow, from_class):
             QMessageBox.about(self, "회원가입", '회원가입이 완료되었습니다.')
             self.uploadToDatabase()
             self.readRFID.setText("")
+            self.inputName.setText("")
+            self.inputPhone.setText("")
+            self.inputCarNum.setText("")
             self.groupBox_Total.hide()
 
         else:
