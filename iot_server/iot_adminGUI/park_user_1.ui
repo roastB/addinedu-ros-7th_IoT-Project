@@ -6028,7 +6028,7 @@
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>/home/yms/ws/iotFromCho/background_user.jpg</pixmap>
+     <pixmap>image/background_user.jpg</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>

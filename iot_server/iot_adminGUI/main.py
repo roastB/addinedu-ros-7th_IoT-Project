@@ -442,7 +442,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             scene = QGraphicsScene()
             parking_graphics_view.setScene(scene)
 
-        pixmap = QPixmap("parkinglot2.png")
+        pixmap = QPixmap("image/parkinglot2.png")
         pixmap_item = QGraphicsPixmapItem(pixmap)
         scene.addItem(pixmap_item)
 
