@@ -83,8 +83,9 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
 
         # 데이터베이스 커넥션 생성 시 자동 커밋을 설정합니다.
         self.startCurrentPlace()
-        
 
+        #############################################################################
+        #############################################################################
         self.SalesGraph = self.findChild(QWidget, "graphicsView_2")
 
         if self.SalesGraph is not None:
@@ -129,16 +130,21 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             self.Graph_2.setTitle('주차된 차량 수')
         else:
             print("SalesGraph:graphicsView_2 위젯을 찾을 수 없습니다.")
+
+        #############################################################################
+        #############################################################################
     
         ###################################################################
         ## 주차중인 차량 갯수와 자리에 따라 LED 제어 : [1] LED 몇개 켜야하는지 판단! ##
         ###################################################################
+
         # 각 라디오 버튼에 대한 독립적인 타이머 생성
         self.timer = QTimer(self)
-        self.repeat = [i for i in range(1, 17)]
+    
+        self.repeat = [ i for i in range(1, 17)]
 
         # 현재까지 주차중인 갯수 및 자리 찾는 쿼리문(Still Parking)
-        stillParking_sql = "SELECT p.id, p.name, p.location, p.exit_log, p.charge FROM membership m, parklog p WHERE m.id = p.id AND p.location not LIKE 'NY' AND p.exit_log is NULL;"
+        stillParking_sql = "SELECT p.id, p.name, p.location, p.exit_log FROM membership m, parklog p WHERE m.id = p.id AND p.location not LIKE 'NY' AND p.exit_log is NULL;"
         self.cur.execute(stillParking_sql)
         stillP_result = self.cur.fetchall()
         stillP_len = len(stillP_result)
@@ -172,6 +178,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
     ##########################################################
     ## 주차중인 차량 갯수와 자리에 따라 LED 제어 : [2] LED ON 함수  ##
     ##########################################################
+    
     def blink_led_ALL(self):
         for i in range(1, 17):
             radio_button = getattr(self, f"radioButton_{i}")
@@ -248,26 +255,17 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             }
         """)
         
-        # # 깜빡이는 효과
-        # QTimer.singleShot(400, lambda rb=radio_button: rb.setStyleSheet("""
-        #    QRadioButton::indicator { 
-        #        width: 12px; 
-        #        height: 12px; 
-        #        border-radius: 6px;
-        #        background-color: white;
-        #        border: 2px solid black;
-        #    }
-        # """))
+        QTimer.singleShot(250, lambda rb=radio_button: rb.setStyleSheet("""
+            QRadioButton::indicator { 
+                width: 12px; 
+                height: 12px; 
+                border-radius: 6px;
+                background-color: white;
+                border: 2px solid black;
+            }
+        """))
     
 ############################################################################### 
-
-    def check_still_parking(self):
-        stillParking_sql = "SELECT p.id, p.name, p.location, p.exit_log, p.charge FROM membership m, parklog p WHERE m.id = p.id AND p.location not LIKE 'NY' AND p.exit_log is NULL;"
-        self.cur.execute(stillParking_sql)
-        stillP_result = self.cur.fetchall()
-        Num_still_parking = len(stillP_result)
-        print(f"현재 주차 중인 차량 수: {Num_still_parking}")
-
 
 ## 정보 조회 초기화
     def Clear(self):
@@ -381,6 +379,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.parkTimeLabel.show()
         self.entryLabel.show()
         self.entryLog.show()
+        parkPlace = parkPlace.replace("'", '')
         sql = "select name, phone, car_num, location, entry_log from parklog where location = '" + parkPlace +"' and exit_log is NULL"
         self.cur.execute(sql)
         result = self.cur.fetchall()
@@ -443,7 +442,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
             scene = QGraphicsScene()
             parking_graphics_view.setScene(scene)
 
-        pixmap = QPixmap("image/parkinglot2.png")
+        pixmap = QPixmap("parkinglot2.png")
         pixmap_item = QGraphicsPixmapItem(pixmap)
         scene.addItem(pixmap_item)
 

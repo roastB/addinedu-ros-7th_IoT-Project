@@ -7293,7 +7293,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>image/background_main.png</pixmap>
+    <pixmap>/home/yms/ws/iotFromCho/background_main.png</pixmap>
    </property>
   </widget>
   <zorder>label_4</zorder>
