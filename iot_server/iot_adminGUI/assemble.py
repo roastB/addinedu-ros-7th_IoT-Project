@@ -8,19 +8,24 @@ from record import WindowClass as r
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("PyQt5 Tabs Example")
+        self.setWindowTitle("Parking Management")
         self.resize(950, 950)
+        tabs = QTabWidget()
+
+
         tabs = QTabWidget()
         self.pu1_tab = pu1(self)  # Sign Up 탭
         self.m_tab = m(self)      # Monitoring 탭
         self.r_tab = r(self)      # Parking Log 탭
-        tabs = QTabWidget()
 
         tabs.addTab(self.pu1_tab, "Sign Up")
         tabs.addTab(self.m_tab, "Monitoring")
         tabs.addTab(self.r_tab, "Parking Log")
+
         self.setCentralWidget(tabs)
+
         tabs.currentChanged.connect(self.update_tab)
+
         tabs.setStyleSheet("""
         QTabWidget::pane {
             border-top: 2px solid #C2C7CB;
@@ -47,6 +52,7 @@ class MainWindow(QMainWindow):
             color: #555555;
         }
         """)
+
     def update_tab(self, index):
         # 탭에 맞는 업데이트 메서드 호출
         if index == 0:  # Sign Up 탭
@@ -55,7 +61,6 @@ class MainWindow(QMainWindow):
             self.m_tab.update()
         elif index == 2:  # Parking Log 탭
             self.r_tab.update()
- 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

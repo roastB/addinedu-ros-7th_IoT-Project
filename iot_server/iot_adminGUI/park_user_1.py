@@ -33,18 +33,18 @@ class WindowClass(QMainWindow, from_class):
             self.cbKind.addItem(kind)
 
         self.remote = mysql.connector.connect(
-            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
+            host = "****",
             port = 3306,
-            user = "root",
-            password = "Dbsalstjq128!",
-            database = "iot"
+            user = "****",
+            password = "****",
+            database = "****"
         )
 
         self.cur = self.remote.cursor()
         
 
     def gotoSignup(self):
-        if self.readRFID.text() and len(self.readRFID.text()) == 13:
+        if self.readRFID.text() and len(self.readRFID.text()):
             self.groupBox_Total.show()
         else:
             QMessageBox.warning(self, "Error", 'ID CARD 태그 후에 회원가입하실 수 있습니다.')

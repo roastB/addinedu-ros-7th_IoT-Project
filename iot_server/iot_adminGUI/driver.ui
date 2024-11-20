@@ -3449,7 +3449,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>backgrounduser.png</pixmap>
+    <pixmap>/home/yms/ws/GIT_WS/iot-repo-5/iot_server/iot_adminGUI/image/background_user.jpg</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>

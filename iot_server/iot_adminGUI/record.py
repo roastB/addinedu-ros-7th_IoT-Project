@@ -17,11 +17,11 @@ class WindowClass(QMainWindow, from_class):
 
         # mysql 접속
         self.remote = mysql.connector.connect(
-            host = "msdb.cvyy46quatrs.ap-northeast-2.rds.amazonaws.com",
+            host = "****",
             port = 3306,
-            user = "root",
-            password = "Dbsalstjq128!",
-            database = "iot"
+            user = "****",
+            password = "****!",
+            database = "****"
         )
         self.cursor = self.remote.cursor()
 
@@ -119,6 +119,7 @@ class WindowClass(QMainWindow, from_class):
                     entry_log between %s AND %s
                 AND
                     exit_log between %s AND %s
+                ORDER BY p.entry_log DESC
                 """
         
         if (name != "ALL"):
