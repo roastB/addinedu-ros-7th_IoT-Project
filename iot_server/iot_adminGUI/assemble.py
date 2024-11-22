@@ -4,7 +4,7 @@ from park_user_1 import WindowClass as pu1
 from main import WindowClass as m
 from record import WindowClass as r
 
-
+# dev tag name : v1.0 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
