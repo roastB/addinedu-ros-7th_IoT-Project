@@ -5,12 +5,12 @@ from datetime import timedelta
 import json
 
 remote = mysql.connector.connect(
-            host = "****",
+            host = "-----",
             port = 3306,
-            user = "****",
-            password = "****",
-            database = "****"
-        )
+            user = "k",
+            password = "----",
+            database = "----"
+    )
 
 cur = remote.cursor()
 
@@ -36,7 +36,7 @@ while True:
     print("name from json:",name)
     print("phone from json:",phone)
     print(f"Received from client: {info}")
-    sql = "select m.id, m.name, m.phone, m.car_num, p.location, p.entry_log, p.exit_log, p.charge from membership m join parklog  p on m.id = p.id where m.name = %s and m.phone = %s"
+    sql = "select m.user_id, m.name, m.phone, c.car_num, p.location, p.entry_log, p.exit_log, p.charge from membership m join parklog p on m.id = p.id join car c on m.user_id = c.user_id where m.name = %s and m.phone = %s"
     cur.execute(sql, (name, phone))
     result = cur.fetchall()
     print(result)

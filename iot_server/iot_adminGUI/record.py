@@ -17,16 +17,16 @@ class WindowClass(QMainWindow, from_class):
 
         # mysql 접속
         self.remote = mysql.connector.connect(
-            host = "****",
+            host = "-----",
             port = 3306,
-            user = "****",
-            password = "****!",
-            database = "****"
-        )
+            user = "k",
+            password = "----",
+            database = "----"
+    )
         self.cursor = self.remote.cursor()
 
         # [1] ID, 이름, 전화번호, 차량번호, 차종, 주차위치, RFID
-        self.cursor.execute("SELECT DISTINCT id FROM membership")
+        self.cursor.execute("SELECT DISTINCT user_id FROM membership")
         dbid = self.cursor.fetchall()
 
         self.cursor.execute("SELECT DISTINCT name FROM membership")
@@ -37,11 +37,11 @@ class WindowClass(QMainWindow, from_class):
         dbphone = self.cursor.fetchall()
         phone_list = ["ALL"] + [row[0] for row in dbphone]
         
-        self.cursor.execute("SELECT DISTINCT car_num FROM membership")
+        self.cursor.execute("SELECT DISTINCT car_num FROM car")
         dbcarnum = self.cursor.fetchall()
         car_num_list = ["ALL"] + [row[0] for row in dbcarnum]
 
-        self.cursor.execute("SELECT DISTINCT kind FROM membership")
+        self.cursor.execute("SELECT DISTINCT kind_name FROM car")
         dbkind = self.cursor.fetchall()
         car_kind_list = ["ALL"] + [row[0] for row in dbkind]
 
@@ -49,7 +49,7 @@ class WindowClass(QMainWindow, from_class):
         dblocation = self.cursor.fetchall()
         location_list = ["ALL"] + [row[0] for row in dblocation]
 
-        self.cursor.execute("SELECT DISTINCT RFID FROM membership")
+        self.cursor.execute("SELECT DISTINCT UID FROM membership")
         dbrfid = self.cursor.fetchall()
         rfid_list = ["ALL"] + [row[0] for row in dbrfid]
 
@@ -109,12 +109,12 @@ class WindowClass(QMainWindow, from_class):
         params = [carInDT_1, carInDT_2, carOutDT_1, carOutDT_2]
         query = """
                 SELECT 
-                    m.id, m.name, m.RFID, m.phone, m.car_num, m.kind, 
+                    m.user_id, m.name, m.UID, m.phone, c.car_num, c.kind_name, 
                     p.location, p.entry_log, p.exit_log 
                 FROM 
-                    membership m, parklog p
+                    membership m, parklog p, car c
                 WHERE 
-                    m.name = p.name AND m.car_num = p.car_num
+                    m.user_id = p.user_id and p.user_id = c.user_id
                 AND
                     entry_log between %s AND %s
                 AND
@@ -131,7 +131,7 @@ class WindowClass(QMainWindow, from_class):
             params.append(phone_num)
 
         if (car_num != "ALL"):
-            query += "AND m.car_num = %s"
+            query += "AND c.car_num = %s"
             params.append(car_num)
 
         if (location != "ALL"):
@@ -139,11 +139,11 @@ class WindowClass(QMainWindow, from_class):
             params.append(location)
 
         if (car_kind != "ALL"):
-            query += "AND m.kind = %s"
+            query += "AND c.kind_name = %s"
             params.append(car_kind)
         
         if (rfid != "ALL"):
-            query += "AND m.RFID = %s"
+            query += "AND m.UID = %s"
             params.append(rfid)
 
         # 최종 Qurey문 실행

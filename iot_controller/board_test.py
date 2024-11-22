@@ -95,6 +95,7 @@ def handle_parking_led():
 
     return message
 
+
 def check_rfid_in_database(rfid_tag):
     """
     MySQL 데이터베이스에서 RFID 태그가 존재하는지 확인하는 함수
@@ -109,7 +110,7 @@ def check_rfid_in_database(rfid_tag):
     )
     try:
         cursor = connection.cursor()
-        sql = "SELECT RFID FROM membership WHERE RFID = %s"
+        sql = "SELECT UID FROM membership WHERE UID = %s"
         cursor.execute(sql, (rfid_tag,))
         result = cursor.fetchone()
         if result is not None:
@@ -136,9 +137,15 @@ def check_reader(reader_id, rfid_tag):
         return False
 
 def update_entry(rfid_tag):
-    sql = """insert into parklog (id, name, phone, car_num, location, entry_log)
-        select m.id, m.name, m.phone, m.car_num, 'NY', current_timestamp from membership m
-        where m.RFID = %s; """
+    # sql = """insert into parklog (id, name, phone, car_num, location, entry_log)
+    #     select m.id, m.name, m.phone, m.car_num, 'NY', current_timestamp from membership m
+    #     where m.UID = %s; """
+    
+    sql = """INSERT INTO parklog (user_id, car_id, location, entry_log)
+            SELECT m.user_id, c.car_id, 'NY', CURRENT_TIMESTAMP
+            FROM membership m
+            JOIN car c ON m.user_id = c.user_id
+            WHERE m.UID = %s;"""
 
     cur.execute(sql, (rfid_tag,))
     remote.commit()
@@ -156,7 +163,7 @@ def parkCheck(reader_id, RFID):
     if reader_id == "IN" or reader_id == "EXIT":
         return
     else:
-        sql = """update parklog p join membership m on p.id = m.id set p.location = %s where m.RFID = %s and p.location = 'NY'"""
+        sql = """update parklog p join membership m on p.user_id = m.user_id set p.location = %s where m.UID = %s and p.location = 'NY'"""
         #print("디버깅 중!!: reader_id = ",reader_id)
         if reader_id == 'IN' or reader_id == "EXIT":
             pass
@@ -167,11 +174,20 @@ def parkCheck(reader_id, RFID):
 
 # 출차 시간 업데이트 + 금액업데이트 
 def exitCheck(RFID):
-    sql_get_entry = "select m.kind, p.entry_log from parklog p join membership m on m.id = p.id where m.RFID = %s and p.entry_log is not NULL and p.exit_log is NULL"
+    # sql_get_entry = "select m.kind, p.entry_log from parklog p join membership m on m.id = p.id where m.RFID = %s and p.entry_log is not NULL and p.exit_log is NULL"
+    sql_get_entry = """SELECT c.kind_name, p.entry_log , c.car_num
+                        FROM parklog p
+                        JOIN membership m ON m.user_id = p.user_id
+                        JOIN car c ON c.user_id = m.user_id
+                        WHERE m.UID = %s
+                        AND p.entry_log IS NOT NULL
+                        AND p.exit_log IS NULL;"""
+    # sql_get_entry = "select c.kind_name, p.entry_log from parklog p join membership m on m.user_id = p.user_id where m.UID = %s and p.entry_log is not NULL and p.exit_log is NULL"
     cur.execute(sql_get_entry, (RFID,))
     result = cur.fetchall()
     kind = result[0][0]
     dt_entry = result[0][1]
+    dt_carnum = result[0][2]
     dt_now = datetime.now()
     dt_entry = dt_entry + timedelta(hours=9)
     match kind:
@@ -187,10 +203,12 @@ def exitCheck(RFID):
         pass
     dt_time = (dt_now-dt_entry).seconds//60 #시분초를 분으로 변환
     dt_fee = (dt_day + dt_time) * fee
-    sql_update_charge = "update parklog p join membership m on p.id = m.id set charge = %s where m.RFID = %s and exit_log is NULL"
+    sql_update_charge = "update parklog p join membership m on p.user_id = m.user_id set charge = %s where m.UID = %s and exit_log is NULL"
     cur.execute(sql_update_charge, (dt_fee, RFID))
-    sql = "update parklog p join membership m on p.id = m.id set exit_log = current_timestamp where m.RFID = %s and exit_log is NULL"
-    send_command_to_arduino_1(f"charge_{dt_fee}")
+    sql = "update parklog p join membership m on p.user_id = m.user_id set exit_log = current_timestamp where m.UID = %s and exit_log is NULL"
+    print(dt_fee)
+    print(dt_carnum)
+    send_command_to_arduino_1(f"ch_{dt_fee}_car_{dt_carnum}")
     cur.execute(sql, (RFID,))
     remote.commit()
 

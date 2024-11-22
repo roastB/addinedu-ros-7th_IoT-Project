@@ -21,7 +21,7 @@ bool isGateOpen = false;
 String lastRfidTag_in = "";
 String lastRfidTag_right_1 = "";
 String lastRfidTag_right_2 = "";
-int count = 0;
+int count = 4;
 
 void readRfidTag_in(MFRC522 &rfid) {
   // RFID 태깅 읽기
@@ -100,7 +100,7 @@ void setup() {
   lcd.setCursor(0, 0);
   lcd.print("Parking Status:"); // 첫 줄 메시지
   lcd.setCursor(0, 1);
-  lcd.print("0 Used, 8 Free"); // 초기 값 직접 출력
+  lcd.print("4 Used, 8 Free"); // 초기 값 직접 출력
   pinMode(A0, OUTPUT);
   pinMode(A1, OUTPUT);
   pinMode(A2, OUTPUT);

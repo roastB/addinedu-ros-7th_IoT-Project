@@ -80,13 +80,24 @@ void readRfidTag_left_2(MFRC522 &rfid) {
   }
 }
 
-void displayCharge(String amount) {
-  lcd.clear(); // LCD 화면 초기화
+// void displayCharge(String amount) {
+//   lcd.clear(); // LCD 화면 초기화
+//   lcd.setCursor(0, 0);
+//   lcd.print("Total Charge:"); // 첫 줄 메시지
+//   lcd.setCursor(0, 1);
+//   lcd.print(amount);          // 요금 출력
+//   lcd.print(" won");          // "won" 추가
+// }
+
+void displayCharge(String carNum, String fee) {
+  lcd.clear();             // LCD 화면 초기화
   lcd.setCursor(0, 0);
-  lcd.print("Total Charge:"); // 첫 줄 메시지
+  lcd.print("Car: ");      // 첫 줄 메시지
+  lcd.print(carNum);       // 차량 번호 출력
   lcd.setCursor(0, 1);
-  lcd.print(amount);          // 요금 출력
-  lcd.print(" won");          // "won" 추가
+  lcd.print("Fee: ");   // 두 번째 줄 메시지
+  lcd.print(fee);          // 요금 출력
+  lcd.print(" won");       // "won" 추가
 }
 
 
@@ -125,7 +136,9 @@ void loop() {
   readRfidTag_exit(rfid_exit);
   readRfidTag_left_1(rfid_left_1);
   readRfidTag_left_2(rfid_left_2);
+  
   static String command = ""; 
+
   // 시리얼 데이터를 읽어서 서보모터 제어
   if (Serial.available() > 0) {
     String command = Serial.readString();
@@ -137,11 +150,16 @@ void loop() {
       isGateOpen = true;
     }
 
-    if (command.startsWith("charge_")) {
-      String chargeAmount = command.substring(7); // "charge_" 이후 값 추출
-      displayCharge(chargeAmount);               // LCD에 요금 표시
-      chargeDisplayStartTime = currentMillis;    // 요금 표시 시작 시간 기록
-      isDisplayingCharge = true;                 // 요금 표시 상태 활성화
+    if (command.startsWith("ch_")) {
+      // "ch_" 이후 데이터를 추출
+      int feeIndex = command.indexOf("_car_"); // "_car_"의 시작 위치 찾기
+      if (feeIndex != -1) {
+        String fee = command.substring(3, feeIndex);       // 요금 추출
+        String carNum = command.substring(feeIndex + 5);  // 차량 번호 추출
+        displayCharge(carNum, fee);                       // LCD에 출력
+        chargeDisplayStartTime = currentMillis;           // 요금 표시 시작 시간 기록
+        isDisplayingCharge = true;                        // 요금 표시 상태 활성화
+      }
     }
   }
 
@@ -159,6 +177,7 @@ void loop() {
     isDisplayingCharge = false; // 요금 표시 상태 종료
   }
 }
+
   //left에는 필요없는 함수 
   // // 자리 수 갱신
   // if (command == '2') {

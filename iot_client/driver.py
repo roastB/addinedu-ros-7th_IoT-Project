@@ -17,12 +17,12 @@ class WindowClass(QMainWindow, from_class):
 
         # mysql 접속
         self.remote = mysql.connector.connect(
-            host = "****",
+            host = "-----",
             port = 3306,
-            user = "****",
-            password = "****",
-            database = "****"
-        )
+            user = "k",
+            password = "----",
+            database = "----"
+    )
         self.cur = self.remote.cursor()
 
         self.inputName

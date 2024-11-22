@@ -78,12 +78,12 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.parklist = {'LEFT_1': False, 'LEFT_2':False, 'RIGHT_1':False, 'RIGHT_2':False}
 
         self.remote = mysql.connector.connect(
-            host = "****",
+            host = "-----",
             port = 3306,
-            user = "****",
-            password = "****",
-            database = "****"
-        )
+            user = "k",
+            password = "----",
+            database = "----"
+    )
         self.cur = self.remote.cursor()
 
         # 데이터베이스 커넥션 생성 시 자동 커미팅을 설정합니다.
@@ -242,7 +242,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.remote.close()
         self.connectDatabase()
 
-        stillParking_sql = "SELECT p.id, p.name, p.location, p.exit_log FROM membership m, parklog p WHERE m.id = p.id AND p.location not LIKE 'NY' AND p.exit_log is NULL;"
+        stillParking_sql = "SELECT p.user_id, m.name, p.location, p.exit_log FROM membership m, parklog p WHERE m.user_id = p.user_id AND p.location not LIKE 'NY' AND p.exit_log is NULL;"
         self.cur.execute(stillParking_sql)
         stillP_result = self.cur.fetchall()
         stillP_len = len(stillP_result)
@@ -282,12 +282,12 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
     # 데이터베이스 경시를 위한 함수
     def connectDatabase(self):
         self.remote = mysql.connector.connect(
-            host = "****",
+            host = "-----",
             port = 3306,
-            user = "****",
-            password = "****",
-            database = "****"
-        )
+            user = "k",
+            password = "----",
+            database = "----"
+    )
         self.cur = self.remote.cursor()
 
     def startCurrentPlace(self):
@@ -384,7 +384,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.entryLabel.show()
         self.entryLog.show()
         parkPlace = parkPlace.replace("'", '')
-        sql = "select name, phone, car_num, location, entry_log from parklog where location = '" + parkPlace +"' and exit_log is NULL"
+        sql = "select m.name, m.phone, c.car_num, p.location, p.entry_log from membership m join parklog p on p.user_id = m.user_id join car c on m.user_id = c.user_id where p.location = '" + parkPlace +"' and p.exit_log is NULL"
         self.cur.execute(sql)
         result = self.cur.fetchall()
         self.showInfo(result)
@@ -402,7 +402,7 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
     
     
     def calculateCharge(self):
-        sql = "select p.entry_log, m.kind from parklog p join membership m on p.id = m.id where p.name like '%"+self.Name.text()+"' and p.exit_log is NULL"
+        sql = "select p.entry_log, c.kind_name from parklog p join c.kind_name on p.user_id = c.user_id join membership m on p.user_id = m.user_id where m.name like '%"+self.Name.text()+"' and p.exit_log is NULL"
         # 입차시간과 차종만 가져와.
 
         self.cur.execute(sql)

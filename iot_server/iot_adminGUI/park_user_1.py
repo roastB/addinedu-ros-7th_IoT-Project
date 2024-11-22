@@ -13,7 +13,6 @@ class WindowClass(QMainWindow, from_class):
         super().__init__()
         self.setupUi(self)
         self.main_window = main_window
-        kind_list = ['EV', 'SUV', '대형', '중형', '준중형', '소형', '경차']
 
         self.inputPhone.setMaxLength(11)
         self.inputPhone.setValidator(QIntValidator())
@@ -29,18 +28,28 @@ class WindowClass(QMainWindow, from_class):
         self.btnJoin.clicked.connect(self.joinClicked)
         self.btnClear.clicked.connect(self.clearClicked)
         self.btnExit.clicked.connect(self.exitClicked)
-        for kind in kind_list:
-            self.cbKind.addItem(kind)
+        
 
         self.remote = mysql.connector.connect(
-            host = "****",
+            host = "-----",
             port = 3306,
-            user = "****",
-            password = "****",
-            database = "****"
-        )
+            user = "k",
+            password = "----",
+            database = "----"
+    )
 
         self.cur = self.remote.cursor()
+
+        sql_get_kind = "select * from kind"
+        self.cur.execute(sql_get_kind)
+        get_kind_result = self.cur.fetchall()
+        #kind_list = ['EV', 'SUV', '대형', '중형', '준중형', '소형', '경차']
+        kind_list = []
+        for each in get_kind_result:
+            kind_list.append(each[0])
+
+        for kind in kind_list:
+            self.cbKind.addItem(kind)
         
 
     def gotoSignup(self):
@@ -50,10 +59,23 @@ class WindowClass(QMainWindow, from_class):
             QMessageBox.warning(self, "Error", 'ID CARD 태그 후에 회원가입하실 수 있습니다.')
 
     def uploadToDatabase(self):
-       join_sql = "insert into membership (RFID, name, phone, car_num, kind) values (%s, %s, %s, %s, %s);"
+        join_membership_sql = "insert into membership (UID, name, phone) values (%s, %s, %s);"
 
-       self.cur.execute(join_sql, (self.readRFID.text(), self.inputName.text(), self.inputPhone.text(), self.inputCarNum.text(), self.cbKind.currentText()))
-       self.remote.commit()
+        self.cur.execute(join_membership_sql, (self.readRFID.text(), self.inputName.text(), self.inputPhone.text()))
+
+        join_car_sql = "insert into car (user_id, kind_name) select user_id, NULL from membership where name like %s "
+
+        self.cur.execute(join_car_sql,  (self.inputName.text(),))
+
+        update_car_sql = "update car set car_num = %s where kind_name is NULL"
+
+        self.cur.execute(update_car_sql, (self.inputCarNum.text(),))
+
+        update_kind_sql = "update car set kind_name = %s where kind_name is NULL and exists (select 1 from kind where kind_name like %s)"
+
+        self.cur.execute(update_kind_sql, (self.cbKind.currentText(), self.cbKind.currentText()))
+
+        self.remote.commit()
 
     def clearClicked(self):
         retval = QMessageBox.question(self,"초기화", "입력하신 정보를 초기화하시겠습니까?" ,QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
