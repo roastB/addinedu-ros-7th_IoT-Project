@@ -16,6 +16,39 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `car`
+--
+
+DROP TABLE IF EXISTS `car`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `car` (
+  `car_id` int NOT NULL AUTO_INCREMENT,
+  `kind_name` varchar(8) DEFAULT NULL,
+  `car_num` varchar(15) NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`car_id`),
+  KEY `kind_name` (`kind_name`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `car_ibfk_1` FOREIGN KEY (`kind_name`) REFERENCES `kind` (`kind_name`),
+  CONSTRAINT `car_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `membership` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `kind`
+--
+
+DROP TABLE IF EXISTS `kind`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `kind` (
+  `kind_name` varchar(8) NOT NULL,
+  PRIMARY KEY (`kind_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `membership`
 --
 
@@ -23,14 +56,12 @@ DROP TABLE IF EXISTS `membership`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `membership` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `RFID` varchar(15) NOT NULL,
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `UID` varchar(15) DEFAULT NULL,
   `name` varchar(15) NOT NULL,
   `phone` varchar(15) NOT NULL,
-  `car_num` varchar(15) NOT NULL,
-  `kind` varchar(8) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -41,29 +72,18 @@ DROP TABLE IF EXISTS `parklog`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `parklog` (
-  `id` int NOT NULL,
-  `name` varchar(15) NOT NULL,
-  `phone` varchar(15) NOT NULL,
-  `car_num` varchar(15) NOT NULL,
-  `location` varchar(8) NOT NULL,
-  `entry_log` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `park_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `car_id` int NOT NULL,
+  `location` varchar(8) DEFAULT NULL,
+  `entry_log` timestamp NULL DEFAULT NULL,
   `exit_log` timestamp NULL DEFAULT NULL,
   `charge` int DEFAULT NULL,
-  KEY `id` (`id`),
-  CONSTRAINT `parklog_ibfk_1` FOREIGN KEY (`id`) REFERENCES `membership` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `test`
---
-
-DROP TABLE IF EXISTS `test`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `test` (
-  `location` varchar(8) DEFAULT NULL,
-  `exit_log` timestamp NULL DEFAULT NULL
+  PRIMARY KEY (`park_id`),
+  KEY `user_id` (`user_id`),
+  KEY `car_id` (`car_id`),
+  CONSTRAINT `parklog_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `membership` (`user_id`),
+  CONSTRAINT `parklog_ibfk_2` FOREIGN KEY (`car_id`) REFERENCES `car` (`car_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -76,4 +96,4 @@ CREATE TABLE `test` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-18 15:34:46
+-- Dump completed on 2024-11-21 20:10:26
