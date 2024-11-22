@@ -11439,7 +11439,7 @@
    </column>
    <column>
     <property name="text">
-     <string>RFID</string>
+     <string>UID</string>
     </property>
    </column>
    <column>

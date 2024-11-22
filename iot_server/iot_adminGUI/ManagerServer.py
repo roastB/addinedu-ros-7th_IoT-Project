@@ -5,17 +5,17 @@ from datetime import timedelta
 import json
 
 remote = mysql.connector.connect(
-            host = "-----",
+            host = "****",
             port = 3306,
-            user = "k",
-            password = "----",
-            database = "----"
+            user = "****",
+            password = "****",
+            database = "****"
     )
 
 cur = remote.cursor()
 
-host = 'yout host'
-port = 'your port' 
+host = "****" 
+port = "****" 
 
 # 소켓 생성
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

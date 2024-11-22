@@ -78,11 +78,11 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
         self.parklist = {'LEFT_1': False, 'LEFT_2':False, 'RIGHT_1':False, 'RIGHT_2':False}
 
         self.remote = mysql.connector.connect(
-            host = "-----",
+            host = "****",
             port = 3306,
-            user = "k",
-            password = "----",
-            database = "----"
+            user = "****",
+            password = "****",
+            database = "****"
     )
         self.cur = self.remote.cursor()
 
@@ -282,11 +282,11 @@ class WindowClass(QtBaseClass, Ui_MainWindow):
     # 데이터베이스 경시를 위한 함수
     def connectDatabase(self):
         self.remote = mysql.connector.connect(
-            host = "-----",
+            host = "****",
             port = 3306,
-            user = "k",
-            password = "----",
-            database = "----"
+            user = "****",
+            password = "****",
+            database = "****"
     )
         self.cur = self.remote.cursor()
 

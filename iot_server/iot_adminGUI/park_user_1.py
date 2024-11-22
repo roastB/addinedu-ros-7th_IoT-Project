@@ -31,11 +31,11 @@ class WindowClass(QMainWindow, from_class):
         
 
         self.remote = mysql.connector.connect(
-            host = "-----",
+            host = "****",
             port = 3306,
-            user = "k",
-            password = "----",
-            database = "----"
+            user = "****",
+            password = "****",
+            database = "****"
     )
 
         self.cur = self.remote.cursor()
