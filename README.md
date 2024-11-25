@@ -35,25 +35,45 @@ GUI를 통해 각 주차장의 실시간 운영 상태와 통계를 명확하게
 |5|주차장 기록 관리|•조건별 상세정보 검색<br />•해당 자리의 입출차 시간 정보 확인|
 
 #### 2-2. 시스템구성도
+
 ![image](https://github.com/user-attachments/assets/ac967786-e1e4-4276-85bf-1571e12fc11a)
+
 #### 2-3. 3D 모델링
+
 ![image](https://github.com/user-attachments/assets/7f5c2703-4df8-43e3-972c-0c4f5c98a122)
+
 ### 3.프로젝트 구현
+
 #### 3-1. DB
+
 ![image](https://github.com/user-attachments/assets/c367af15-f071-4c56-a0d4-f40aeaa4526b)
+
 #### 3-2. 주차장 제작
+
 ![image](https://github.com/user-attachments/assets/fdbcecb8-3a19-41f6-b355-b15dec3a4898)
+
 #### 3-2. IO
+
 ![image](https://github.com/user-attachments/assets/42f0ae37-a7bd-4f1b-a1e7-39d8a9c86fc5)
+
 ![image](https://github.com/user-attachments/assets/31f424f9-a6e9-4767-bca3-ba2243205186)
+
 ![image](https://github.com/user-attachments/assets/844793e6-da26-414d-9c73-e921e90e70e9)
+
 #### 3-3. GUI
+
 ![image](https://github.com/user-attachments/assets/f6318a0c-6101-431c-840c-2599dae2bd69)
+
 ![image](https://github.com/user-attachments/assets/86d94268-82d7-4b32-a307-1c9765345450)
+
 ![image](https://github.com/user-attachments/assets/b99931f6-3386-4703-a928-faece1ec7bb2)
+
 ![image](https://github.com/user-attachments/assets/b89eb68a-be95-4da5-aa09-410f74073f3a)
+
 ### 4.프로젝트 결과
+
 ### 4-1. 테스트 케이스 결과
+
 |No|Input|Output|Result|
 |---|---|---|---|
 |1|입구 RFID 리더기에 차량 RFID Key 인식|- 입구 차단기 상승 및 하강<br />- 입구 LCD 주차가능 대수 업데이트|PASS|
@@ -61,4 +81,5 @@ GUI를 통해 각 주차장의 실시간 운영 상태와 통계를 명확하게
 |3|출차 RFID 리더기에 차량 RFID Key 인식|- 출차 차단기 상승 및 하강<br />- 주차 가능 자리 주차 경로 LED 점등<br />- 출구 LCD 주차금액 안내<br />- IoT Admin GUI 주차 자리 표시 버튼 색상 자동 전환|PASS|
 |4|IoT Admin GUI “Parking Log” 탭 검색 조건 입력|- 상세 검색 결과 출력|PASS|
 |5|IoT User GUI 주차 정보 검색|- 상세 검색 결과 출력|PASS|
+
 ### 4-2. 기능 작동 영상
