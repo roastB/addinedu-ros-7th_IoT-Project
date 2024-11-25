@@ -36,39 +36,39 @@ GUI를 통해 각 주차장의 실시간 운영 상태와 통계를 명확하게
 
 #### 2-2. 시스템구성도
 
-![image](https://github.com/user-attachments/assets/ac967786-e1e4-4276-85bf-1571e12fc11a)
+![image](https://github.com/user-attachments/assets/12b3725c-2d2e-4264-b5c2-be5966010df3)
 
 #### 2-3. 3D 모델링
 
-![image](https://github.com/user-attachments/assets/7f5c2703-4df8-43e3-972c-0c4f5c98a122)
+![image](https://github.com/user-attachments/assets/36e0a39a-e9df-4d56-8762-fad37c7325ad)
 
 ### 3.프로젝트 구현
 
 #### 3-1. DB
 
-![image](https://github.com/user-attachments/assets/c367af15-f071-4c56-a0d4-f40aeaa4526b)
+![image](https://github.com/user-attachments/assets/238a0643-fcf1-4ff1-a102-6097023b4f6c)
 
 #### 3-2. 주차장 제작
 
-![image](https://github.com/user-attachments/assets/fdbcecb8-3a19-41f6-b355-b15dec3a4898)
+![image](https://github.com/user-attachments/assets/41b51ecf-ef9a-4f5b-b757-77031d6a9c63)
 
 #### 3-2. IO
 
-![image](https://github.com/user-attachments/assets/42f0ae37-a7bd-4f1b-a1e7-39d8a9c86fc5)
+![image](https://github.com/user-attachments/assets/92be24f7-c180-473b-887f-ec9d7c5f3edf)
 
-![image](https://github.com/user-attachments/assets/31f424f9-a6e9-4767-bca3-ba2243205186)
+![image](https://github.com/user-attachments/assets/8452a9ff-039e-4eb0-b995-987ad476c26d)
 
-![image](https://github.com/user-attachments/assets/844793e6-da26-414d-9c73-e921e90e70e9)
+![image](https://github.com/user-attachments/assets/428e1322-c961-45db-81ef-496da1707528)
 
 #### 3-3. GUI
 
-![image](https://github.com/user-attachments/assets/f6318a0c-6101-431c-840c-2599dae2bd69)
+![image](https://github.com/user-attachments/assets/776c591a-4fd3-44b3-8866-13eb08f3160e)
 
-![image](https://github.com/user-attachments/assets/86d94268-82d7-4b32-a307-1c9765345450)
+![image](https://github.com/user-attachments/assets/a5bc29d9-3493-405a-8a60-d454bd686ad5)
 
-![image](https://github.com/user-attachments/assets/b99931f6-3386-4703-a928-faece1ec7bb2)
+![image](https://github.com/user-attachments/assets/e49ab16a-e36d-4f24-80e4-84f5ac80ab60)
 
-![image](https://github.com/user-attachments/assets/b89eb68a-be95-4da5-aa09-410f74073f3a)
+![image](https://github.com/user-attachments/assets/d2e54e64-9f4e-4d9b-b20e-b6a1b9dbed56)
 
 ### 4.프로젝트 결과
 
@@ -83,3 +83,4 @@ GUI를 통해 각 주차장의 실시간 운영 상태와 통계를 명확하게
 |5|IoT User GUI 주차 정보 검색|- 상세 검색 결과 출력|PASS|
 
 ### 4-2. 기능 작동 영상
+[https://www.youtube.com/watch?v=a8bJivGECbU](https://www.youtube.com/watch?v=a8bJivGECbU)
