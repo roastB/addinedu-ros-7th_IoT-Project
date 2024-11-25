@@ -84,3 +84,6 @@ GUI를 통해 각 주차장의 실시간 운영 상태와 통계를 명확하게
 
 ### 4-2. 기능 작동 영상
 [https://www.youtube.com/watch?v=a8bJivGECbU](https://www.youtube.com/watch?v=a8bJivGECbU)
+
+### 4-3. 발표자료
+[https://docs.google.com/presentation/d/1Cbgnzgge9zj94wtTtIY1QZwocBo0pep31wvHPXRNmMU/edit?usp=sharing](https://docs.google.com/presentation/d/1Cbgnzgge9zj94wtTtIY1QZwocBo0pep31wvHPXRNmMU/edit?usp=sharing)
