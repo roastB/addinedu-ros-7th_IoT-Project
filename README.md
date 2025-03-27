@@ -1,5 +1,7 @@
 ## **주차관제시스템 : 주차 경로 안내 및 주차장 모니터링**
 
+## 👉 [통합 영상](https://www.youtube.com/watch?v=o1u0oK_6-WA)
+
 ### 1.프로젝트 소개
 #### 1-1.프로젝트 개요
 차량의 주차 편의를 높이고, 효율적인 주차 공간 활용을 위해 설계된 스마트 주차 시스템입니다.<br />
@@ -82,8 +84,4 @@ GUI를 통해 각 주차장의 실시간 운영 상태와 통계를 명확하게
 |4|IoT Admin GUI “Parking Log” 탭 검색 조건 입력|- 상세 검색 결과 출력|PASS|
 |5|IoT User GUI 주차 정보 검색|- 상세 검색 결과 출력|PASS|
 
-### 4-2. 기능 작동 영상
-[https://www.youtube.com/watch?v=a8bJivGECbU](https://www.youtube.com/watch?v=a8bJivGECbU)
-
-### 4-3. 발표자료
-[https://docs.google.com/presentation/d/1Cbgnzgge9zj94wtTtIY1QZwocBo0pep31wvHPXRNmMU/edit?usp=sharing](https://docs.google.com/presentation/d/1Cbgnzgge9zj94wtTtIY1QZwocBo0pep31wvHPXRNmMU/edit?usp=sharing)
+### 4-2. [발표자료](https://docs.google.com/presentation/d/1Cbgnzgge9zj94wtTtIY1QZwocBo0pep31wvHPXRNmMU/edit?usp=sharing)
